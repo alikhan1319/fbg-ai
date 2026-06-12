@@ -1,0 +1,15 @@
+{
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
+  "eslint.workingDirectories": ["frontend"],
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/frontend/.next": true,
+    "**/frontend/node_modules": false
+  },
+  "search.exclude": {
+    "**/frontend/.next": true,
+    "**/node_modules": true
+  }
+}

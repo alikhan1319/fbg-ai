@@ -1,0 +1,25 @@
+# virtual environments
+venv/
+.venv/
+backend/.venv311/
+backend/.venv311sr/
+
+# python cache
+__pycache__/
+*.pyc
+
+# environment
+.env
+
+# ML / heavy files
+*.dll
+*.lib
+*.pt
+*.onnx
+
+# uploads
+uploads/
+media/
+
+# node
+node_modules/

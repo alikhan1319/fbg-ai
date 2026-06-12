@@ -1,0 +1,27 @@
+# Core API
+fastapi>=0.110.0
+uvicorn>=0.27.0
+python-multipart>=0.0.9
+
+# Image stack — numpy<2 required for torch 2.1.2 + Real-ESRGAN/basicsr
+numpy>=1.26.0,<2.0.0
+Pillow>=9.5.0,<10.0.0
+opencv-python-headless==4.9.0.80
+rembg==2.0.59
+
+# AI upscale / face restore (CPU wheels)
+torch==2.1.2
+torchvision==0.16.2
+basicsr==1.4.2
+realesrgan==0.3.0
+gfpgan==1.3.8
+tqdm>=4.67.0
+
+# Watermark inpainting
+simple-lama-inpainting>=0.1.2
+
+# CMS / MySQL
+sqlalchemy>=2.0.0
+pymysql>=1.1.0
+cryptography>=42.0.0
+email-validator>=2.0.0
