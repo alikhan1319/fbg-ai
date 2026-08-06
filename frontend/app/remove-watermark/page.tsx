@@ -1,38 +1,35 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/constants";
 import { type ToolPageConfig } from "@/components/tool/ToolLayout";
 import { ToolPageWrapper } from "@/components/tool/ToolPageWrapper";
-import { ToolSoftwareApplicationSchema } from "@/components/tool/ToolSchemas";
+import {
+  BreadcrumbSchema,
+  ToolSoftwareApplicationSchema,
+  ToolWebPageSchema,
+} from "@/components/tool/ToolSchemas";
+import { WATERMARK_SEO, toolOgImage } from "@/lib/seo";
 
-const urlPath = "/remove-watermark";
-const og = `${SITE_URL.replace(/\/$/, "")}${urlPath}/opengraph-image`;
+const urlPath = WATERMARK_SEO.path;
+const og = toolOgImage(urlPath);
 
 export const metadata: Metadata = {
-  title: "AI Watermark Remover | Remove Watermarks from Images Online",
-  description:
-    "Remove watermarks from images with FBR AI's smart inpainting. Auto-detect or manually target the watermark area, then export a clean result. Free to start, no signup.",
-  keywords: [
-    "remove watermark from image",
-    "AI watermark remover",
-    "watermark remover online",
-    "inpainting",
-    "remove logo from photo",
-    "clean image",
-  ],
-  alternates: { canonical: urlPath },
+  title: WATERMARK_SEO.title,
+  description: WATERMARK_SEO.description,
+  keywords: [...WATERMARK_SEO.keywords],
+  alternates: { canonical: WATERMARK_SEO.canonical },
   openGraph: {
-    title: "AI Watermark Remover - FBR AI",
-    description: "Smart inpainting to remove watermarks and logos from your own images.",
+    title: WATERMARK_SEO.title,
+    description: WATERMARK_SEO.description,
     url: urlPath,
     type: "website",
-    images: [{ url: og, width: 1200, height: 630, alt: "FBR AI Watermark Remover" }],
+    images: [{ url: og, width: 1200, height: 630, alt: "FBG AI Watermark Remover" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Watermark Remover - FBR AI",
-    description: "Remove watermarks with smart inpainting.",
+    title: WATERMARK_SEO.title,
+    description: WATERMARK_SEO.description,
     images: [og],
   },
+  robots: { index: true, follow: true },
 };
 
 const config: ToolPageConfig = {
@@ -106,7 +103,7 @@ const config: ToolPageConfig = {
     { title: "Creators", description: "Fix overlays on content you own.", iconLabel: "Creator" },
     { title: "Archival cleanup", description: "Restore scans with stamped marks (where permitted).", iconLabel: "Restore" },
   ],
-  relatedIntro: "Explore the full FBR AI suite — upscale, generate backgrounds, remove backgrounds, blur backgrounds, and enhance images.",
+  relatedIntro: "Explore the full FBG AI suite — upscale, generate backgrounds, remove backgrounds, blur backgrounds, and enhance images.",
   layoutOptions: {
     hideAdsSidebar: true,
     enhancedUpload: true,
@@ -139,9 +136,20 @@ const config: ToolPageConfig = {
 export default function RemoveWatermarkPage() {
   return (
     <>
+      <ToolWebPageSchema
+        name={WATERMARK_SEO.title}
+        description={WATERMARK_SEO.description}
+        urlPath={urlPath}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Watermark Remover", path: urlPath },
+        ]}
+      />
       <ToolSoftwareApplicationSchema
-        name="FBR AI Watermark Remover"
-        description={metadata.description as string}
+        name="FBG AI Watermark Remover"
+        description={WATERMARK_SEO.description}
         urlPath={urlPath}
       />
       <ToolPageWrapper config={config} />

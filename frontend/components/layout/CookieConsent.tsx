@@ -64,7 +64,7 @@ export function CookieConsent() {
           <button
             type="button"
             onClick={() => save("all")}
-            className="btn-gradient min-h-[44px] rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-95"
+            className="btn-gradient min-h-[44px] rounded-md px-5 py-2.5 text-sm font-semibold text-brand-navy transition-opacity hover:opacity-95"
           >
             Accept all
           </button>

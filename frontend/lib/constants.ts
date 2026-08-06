@@ -1,22 +1,68 @@
+/** Bump when replacing logo/icon files so Next Image + browsers drop the old cache. */
+export const ASSET_V = "20260806c";
+
 export const BRAND = {
   name: "Free Background Remover AI",
   shortName: "FBG AI",
   companyName: "TAH Digital Solutions",
-  logo: "/img/web-logo.png",
-  icon: "/img/web-icon.png",
+  logo: `/img/web-logo.png?v=${ASSET_V}`,
+  icon: `/img/web-icon.png?v=${ASSET_V}`,
   tagline: "6-in-1 AI image editing — free & instant",
 } as const;
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://freebackgroundremoverai.com";
+
+function envText(key: string, fallback: string) {
+  const value = process.env[key]?.trim();
+  return value || fallback;
+}
 
 export const CONTACT = {
-  supportEmail: "support@freebackgroundremoverai.com",
-  generalEmail: "hello@freebackgroundremoverai.com",
-  privacyEmail: "privacy@freebackgroundremoverai.com",
-  responseTime: "Within 24–48 hours on business days",
-  hours: "Monday – Friday, 9:00 AM – 6:00 PM (UTC)",
-  location: "Remote-first team · Worldwide support",
+  supportEmail: envText(
+    "NEXT_PUBLIC_CONTACT_SUPPORT_EMAIL",
+    "support@freebackgroundremoverai.com"
+  ),
+  generalEmail: envText(
+    "NEXT_PUBLIC_CONTACT_GENERAL_EMAIL",
+    "hello@freebackgroundremoverai.com"
+  ),
+  privacyEmail: envText(
+    "NEXT_PUBLIC_CONTACT_PRIVACY_EMAIL",
+    "privacy@freebackgroundremoverai.com"
+  ),
+  responseTime: envText(
+    "NEXT_PUBLIC_CONTACT_RESPONSE_TIME",
+    "Within 24–48 hours on business days"
+  ),
+  hours: envText(
+    "NEXT_PUBLIC_CONTACT_HOURS",
+    "Monday – Friday, 9:00 AM – 6:00 PM"
+  ),
+  location: envText(
+    "NEXT_PUBLIC_CONTACT_LOCATION",
+    "Remote-first team · Worldwide support"
+  ),
 } as const;
+
+/** Social links from env — leave a URL empty in .env to hide that network */
+function socialFromEnv(
+  label: "Instagram" | "Facebook",
+  envKey: string,
+  fallback: string
+): { label: "Instagram" | "Facebook"; href: string } | null {
+  const raw = process.env[envKey];
+  // Explicit empty string in env = hide
+  if (raw !== undefined && raw.trim() === "") return null;
+  const href = (raw?.trim() || fallback).trim();
+  if (!href) return null;
+  return { label, href };
+}
+
+export const SOCIAL_LINKS = [
+  socialFromEnv("Instagram", "NEXT_PUBLIC_SOCIAL_INSTAGRAM", "https://www.instagram.com/"),
+  socialFromEnv("Facebook", "NEXT_PUBLIC_SOCIAL_FACEBOOK", "https://www.facebook.com/"),
+].filter((item): item is { label: "Instagram" | "Facebook"; href: string } => item != null);
 
 export const LEGAL = {
   privacyLastUpdated: "May 29, 2026",

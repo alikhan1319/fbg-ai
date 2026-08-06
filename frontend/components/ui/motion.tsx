@@ -87,19 +87,15 @@ export function PremiumCard({
   return (
     <motion.div
       whileHover={{
-        y: -8,
-        transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+        y: -2,
+        transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] },
       }}
       className={cn(
-        "luxury-card group relative overflow-hidden rounded-2xl border border-brand-border/80 bg-white p-6",
-        glow && "luxury-card-glow",
+        "group relative overflow-hidden border border-brand-border bg-white p-6 transition-colors hover:border-brand-text/20",
+        glow && "border-brand-secondary/30",
         className
       )}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-brand-secondary/10 blur-2xl" />
-        <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-brand-accent/10 blur-2xl" />
-      </div>
       <div className="relative">{children}</div>
     </motion.div>
   );

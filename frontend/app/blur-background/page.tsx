@@ -1,38 +1,35 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/constants";
 import { type ToolPageConfig } from "@/components/tool/ToolLayout";
 import { ToolPageWrapper } from "@/components/tool/ToolPageWrapper";
-import { ToolSoftwareApplicationSchema } from "@/components/tool/ToolSchemas";
+import {
+  BreadcrumbSchema,
+  ToolSoftwareApplicationSchema,
+  ToolWebPageSchema,
+} from "@/components/tool/ToolSchemas";
+import { BLUR_SEO, toolOgImage } from "@/lib/seo";
 
-const urlPath = "/blur-background";
-const og = `${SITE_URL.replace(/\/$/, "")}${urlPath}/opengraph-image`;
+const urlPath = BLUR_SEO.path;
+const og = toolOgImage(urlPath);
 
 export const metadata: Metadata = {
-  title: "Background Blur Online | AI Portrait Blur & Bokeh Effect",
-  description:
-    "Blur background online with FBR AI. Adjustable blur intensity, portrait-style subject focus, and clean exports for product and portrait photos. Free to start, no signup.",
-  keywords: [
-    "blur background",
-    "background blur effect",
-    "portrait blur",
-    "bokeh effect",
-    "blur photo background",
-    "AI portrait mode",
-  ],
-  alternates: { canonical: urlPath },
+  title: BLUR_SEO.title,
+  description: BLUR_SEO.description,
+  keywords: [...BLUR_SEO.keywords],
+  alternates: { canonical: BLUR_SEO.canonical },
   openGraph: {
-    title: "Background Blur - FBR AI",
-    description: "Create portrait-mode blur with adjustable intensity and clean results.",
+    title: BLUR_SEO.title,
+    description: BLUR_SEO.description,
     url: urlPath,
     type: "website",
-    images: [{ url: og, width: 1200, height: 630, alt: "FBR AI Background Blur" }],
+    images: [{ url: og, width: 1200, height: 630, alt: "FBG AI Background Blur" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Background Blur - FBR AI",
-    description: "Blur backgrounds with adjustable intensity and bokeh style.",
+    title: BLUR_SEO.title,
+    description: BLUR_SEO.description,
     images: [og],
   },
+  robots: { index: true, follow: true },
 };
 
 const config: ToolPageConfig = {
@@ -139,9 +136,16 @@ const config: ToolPageConfig = {
 export default function BlurBackgroundPage() {
   return (
     <>
+      <ToolWebPageSchema name={BLUR_SEO.title} description={BLUR_SEO.description} urlPath={urlPath} />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Background Blur", path: urlPath },
+        ]}
+      />
       <ToolSoftwareApplicationSchema
-        name="FBR AI Background Blur"
-        description={metadata.description as string}
+        name="FBG AI Background Blur"
+        description={BLUR_SEO.description}
         urlPath={urlPath}
       />
       <ToolPageWrapper config={config} />

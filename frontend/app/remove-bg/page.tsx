@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/constants";
-import { REMOVE_BG_SEO, PRIMARY_KEYWORD, PRIMARY_KEYWORD_TITLE } from "@/lib/seo";
+import { REMOVE_BG_SEO, PRIMARY_KEYWORD, PRIMARY_KEYWORD_TITLE, toolOgImage } from "@/lib/seo";
 import { type ToolPageConfig } from "@/components/tool/ToolLayout";
 import { ToolPageWrapper } from "@/components/tool/ToolPageWrapper";
 import {
@@ -10,7 +9,7 @@ import {
 } from "@/components/tool/ToolSchemas";
 
 const urlPath = REMOVE_BG_SEO.path;
-const og = `${SITE_URL.replace(/\/$/, "")}${urlPath}/opengraph-image`;
+const og = toolOgImage(urlPath);
 
 export const metadata: Metadata = {
   title: REMOVE_BG_SEO.title,
@@ -37,7 +36,7 @@ const config: ToolPageConfig = {
   id: "remove-bg",
   route: urlPath,
   primaryKeyword: PRIMARY_KEYWORD,
-  h1: `${PRIMARY_KEYWORD_TITLE} — Remove Image Background Online Free`,
+  h1: "Remove Image Background Online Free — Transparent PNG",
   subheadline:
     "Upload any photo and let our free background remover AI deliver a clean transparent PNG — hair-level edges, no watermark, no signup, ready in seconds.",
   ctaLabel: "Upload Image Now",
@@ -107,7 +106,7 @@ const config: ToolPageConfig = {
     { title: "Real estate & vehicles", description: "Isolate subjects for clean listings and marketplaces.", iconLabel: "Listings" },
     { title: "Developers", description: "Prototype image workflows with predictable outputs.", iconLabel: "Workflow" },
   ],
-  relatedIntro: "Explore the full FBR AI suite — upscale, generate backgrounds, remove watermarks, blur backgrounds, and enhance images.",
+  relatedIntro: "Explore the full FBG AI suite — upscale, generate backgrounds, remove watermarks, blur backgrounds, and enhance images.",
   layoutOptions: {
     hideAdsSidebar: true,
     enhancedUpload: true,

@@ -24,7 +24,7 @@ import type { BlogPost } from "@/lib/blog-posts";
 import type { CmsBlogArticle, CmsBlogPost } from "@/lib/cms-server";
 import { getRelatedBlogPosts } from "@/lib/blog";
 import { isUploadedBlogImage, resolveBlogHtmlImages, resolveBlogImage } from "@/lib/media-url";
-import { PRIMARY_KEYWORD, PRIMARY_KEYWORD_TITLE } from "@/lib/seo";
+import { PRIMARY_KEYWORD, PRIMARY_KEYWORD_TITLE, EDITORIAL_AUTHOR } from "@/lib/seo";
 
 function slugifyHeading(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -51,7 +51,7 @@ export function BlogArticleContent({
       <Navbar />
       <main className="overflow-x-clip">
         {/* Hero — title only */}
-        <section className="hero-mesh hero-grid-dots relative overflow-hidden pt-28 pb-10 sm:pt-32 sm:pb-12">
+        <section className="bg-brand-navy relative overflow-hidden pt-28 pb-10 sm:pt-32 sm:pb-12">
           <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-brand-purple/15 blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute -right-16 top-32 h-64 w-64 rounded-full bg-brand-secondary/10 blur-3xl" aria-hidden />
 
@@ -74,7 +74,7 @@ export function BlogArticleContent({
               transition={{ duration: 0.5 }}
               className="max-w-4xl"
             >
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-brand-secondary shadow-sm">
+              <span className="inline-flex items-center gap-1.5 studio-label">
                 <Sparkles className="h-3.5 w-3.5 text-brand-purple" aria-hidden />
                 {article.category}
               </span>
@@ -95,7 +95,7 @@ export function BlogArticleContent({
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-brand-secondary" aria-hidden />
-                  {BRAND.name}
+                  {EDITORIAL_AUTHOR.name}
                 </span>
               </div>
             </motion.div>
@@ -107,7 +107,7 @@ export function BlogArticleContent({
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_320px]">
             <FadeInView className="min-w-0">
               {/* Featured image */}
-              <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-brand-border bg-brand-card shadow-lg sm:rounded-3xl">
+              <div className="relative aspect-[16/10] overflow-hidden  border border-brand-border bg-brand-card   sm:rounded-3xl">
                 <Image
                   src={resolveBlogImage(article.image)}
                   alt={article.imageAlt}
@@ -133,7 +133,7 @@ export function BlogArticleContent({
                       <section key={sectionId} id={sectionId} className="scroll-mt-28">
                         {section.heading ? (
                           <div className="mb-5 flex items-start gap-4">
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-secondary to-brand-purple text-sm font-bold text-white shadow-lg">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br bg-brand-secondary text-sm font-bold text-brand-navy">
                               {i + 1}
                             </span>
                             <h2 className="pt-1.5 text-2xl font-bold tracking-tight text-brand-text sm:text-[1.65rem]">
@@ -179,7 +179,7 @@ export function BlogArticleContent({
 
             {/* Sidebar */}
             <aside className="min-w-0 space-y-6 lg:sticky lg:top-28 lg:self-start">
-              <div className="luxury-card rounded-2xl border border-brand-border bg-white p-5 shadow-lg">
+              <div className="border border-brand-border  border border-brand-border bg-white p-5  ">
                 <p className="text-xs font-bold uppercase tracking-widest text-brand-muted">On this page</p>
                 {toc.length > 0 ? (
                   <ul className="mt-4 space-y-2">
@@ -199,7 +199,7 @@ export function BlogArticleContent({
                 )}
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-brand-secondary/30 bg-gradient-to-br from-brand-secondary to-brand-purple p-6 text-white shadow-xl">
+              <div className="overflow-hidden  border border-brand-secondary/30 bg-gradient-to-br bg-brand-secondary p-6 text-white  ">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
                   <Wrench className="h-5 w-5" aria-hidden />
                 </div>
@@ -216,18 +216,30 @@ export function BlogArticleContent({
                 </Link>
               </div>
 
-              <div className="rounded-2xl border border-brand-border bg-brand-card/50 p-5">
+              <div className=" border border-brand-border bg-brand-card/50 p-5">
                 <p className="text-xs font-bold uppercase tracking-widest text-brand-muted">Published by</p>
-                <p className="mt-2 font-semibold text-brand-text">{BRAND.name}</p>
+                <p className="mt-2 font-semibold text-brand-text">{EDITORIAL_AUTHOR.name}</p>
                 <p className="mt-1 text-sm text-brand-muted">
-                  Created with care by {BRAND.companyName}
+                  {EDITORIAL_AUTHOR.company} · {BRAND.shortName}
                 </p>
                 <Link
+                  href="/about"
+                  className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-secondary hover:underline"
+                >
+                  About {BRAND.shortName}
+                </Link>
+                <Link
                   href="/blog"
-                  className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-secondary hover:underline"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-secondary hover:underline"
                 >
                   <ChevronRight className="h-4 w-4 rotate-180" aria-hidden />
                   All blog articles
+                </Link>
+                <Link
+                  href="/"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-muted hover:text-brand-secondary"
+                >
+                  Back to homepage
                 </Link>
               </div>
             </aside>
@@ -256,7 +268,7 @@ export function BlogArticleContent({
 
         {/* CTA */}
         <SectionShell className="pb-28 sm:pb-32 pt-0" ariaLabel="Get started">
-          <FadeInView className="relative overflow-hidden rounded-3xl border border-white/10 bg-brand-navy px-8 py-14 text-center shadow-2xl sm:px-12">
+          <FadeInView className="relative overflow-hidden  border border-white/10 bg-brand-navy px-8 py-14 text-center   sm:px-12">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-secondary/25 via-transparent to-brand-purple/20" aria-hidden />
             <div className="relative">
               <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
@@ -276,7 +288,7 @@ export function BlogArticleContent({
               <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   href={article.toolLink}
-                  className="btn-ripple btn-gradient btn-shine inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg sm:w-auto"
+                  className="btn-ripple btn-gradient btn-shine inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-brand-navy sm:w-auto"
                 >
                   Try related tool
                   <ArrowRight className="h-4 w-4" />

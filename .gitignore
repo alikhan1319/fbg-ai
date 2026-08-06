@@ -21,5 +21,11 @@ __pycache__/
 uploads/
 media/
 
+# local smoke / debug images
+backend/_*.png
+backend/_*.jpg
+backend/_*.jpeg
+backend/_*.webp
+
 # node
 node_modules/

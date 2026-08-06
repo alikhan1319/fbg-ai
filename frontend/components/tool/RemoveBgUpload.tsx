@@ -15,11 +15,10 @@ import {
 import { removeBackground } from "@/services/api";
 import { ProcessingAnimation, ProcessingErrorCard } from "@/components/tool/remove-bg/ProcessingAnimation";
 import { ResultSection } from "@/components/tool/remove-bg/ResultSection";
+import { ToolDropzoneFrame, ToolWorkspace } from "@/components/tool/ToolWorkspace";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/ToastProvider";
 import { Button } from "@/components/ui/Button";
-import { PremiumCard } from "@/components/ui/motion";
-import { SectionHeading, SectionShell } from "@/components/ui/SectionHeading";
 import type { ToolPageConfig } from "@/components/tool/ToolLayout";
 import { BRAND } from "@/lib/constants";
 
@@ -41,10 +40,16 @@ function useSimulatedProgress() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const start = useCallback(() => {
-    setProgress(8);
+    setProgress(6);
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      setProgress((p) => (p >= 92 ? p : p + Math.random() * 6 + 2));
+      setProgress((p) => {
+        // Keep creeping while the API works so "Finishing" never looks frozen.
+        if (p >= 99) return p;
+        if (p >= 92) return Math.min(99, p + 0.12 + Math.random() * 0.08);
+        const step = p < 40 ? 2.4 : p < 70 ? 1.4 : 0.55;
+        return Math.min(92, p + step + Math.random() * 0.9);
+      });
     }, 280);
   }, []);
 
@@ -84,6 +89,8 @@ export function RemoveBgUpload({
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
+  const [imageType, setImageType] = useState<string | null>(null);
   const [processedSize, setProcessedSize] = useState<number | null>(null);
   const [fileInfo, setFileInfo] = useState<{ name: string; size: number } | null>(null);
   const lastFileRef = useRef<File | null>(null);
@@ -135,6 +142,8 @@ export function RemoveBgUpload({
       setErrorMessage(null);
       setOriginalUrl(null);
       setProcessedUrl(null);
+      setBackgroundUrl(null);
+      setImageType(null);
       setProcessedSize(null);
       startProgress();
 
@@ -152,6 +161,8 @@ export function RemoveBgUpload({
 
         setOriginalUrl(result.original_image_url);
         setProcessedUrl(result.processed_image_url);
+        setBackgroundUrl(result.background_image_url || null);
+        setImageType(result.image_type || null);
         setState("success");
         scrollTo("results");
       } catch (err) {
@@ -200,6 +211,8 @@ export function RemoveBgUpload({
     setErrorMessage(null);
     setOriginalUrl(null);
     setProcessedUrl(null);
+    setBackgroundUrl(null);
+    setImageType(null);
     setProcessedSize(null);
     setFileInfo(null);
     lastFileRef.current = null;
@@ -259,193 +272,180 @@ export function RemoveBgUpload({
 
   return (
     <>
-      {/* ——— Step 1: Upload ——— */}
-      <SectionShell id="upload" className="bg-brand-card/40" ariaLabel="Upload image">
-        <div className="section-divider absolute inset-x-0 top-0" />
-        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-          <div>
-            <SectionHeading
-              align="left"
-              label="Step 1"
-              title="Upload your image"
-              highlight=""
-              description="Drop a photo below. Processing runs here — your result appears in a separate section when ready."
-            />
-
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-brand-secondary/20 bg-brand-secondary/5 px-4 py-2 text-sm font-semibold text-brand-secondary">
-                <Zap className="h-4 w-4" aria-hidden />
-                ~2 seconds processing time
-              </span>
-              {(["JPG", "PNG", "WEBP"] as const).map((fmt) => (
-                <span
-                  key={fmt}
-                  className="rounded-full border border-black/5 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-brand-muted"
-                >
-                  {fmt}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-8">
-              <div className={cn("animated-border shadow-2xl shadow-brand-secondary/10", isDragActive && "brightness-110")}>
-                <div className="animated-border-inner p-6 sm:p-8">
-                  <AnimatePresence mode="wait">
-                    {!showUploadContent ? (
-                      <motion.div key="dropzone" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <div
-                          {...getRootProps()}
-                          className={cn(
-                            "flex min-h-[280px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 transition-all duration-300",
-                            isDragActive ? "border-brand-secondary/60 bg-white" : "border-brand-border bg-white/80"
-                          )}
-                        >
-                          <input {...getInputProps()} aria-label={config.uploadLabel} />
-                          <motion.div
-                            whileHover={{ scale: 1.06 }}
-                            className="flex h-20 w-20 items-center justify-center rounded-2xl bg-linear-to-br from-brand-secondary/15 to-brand-purple/15"
-                          >
-                            <div className={cn("flex h-14 w-14 items-center justify-center rounded-xl text-white shadow-lg", config.heroGradientClass)}>
-                              <Upload className="h-7 w-7" />
-                            </div>
-                          </motion.div>
-                          <p className="mt-6 text-xl font-bold text-brand-text">Drop your image here</p>
-                          <p className="mt-2 text-sm text-brand-muted/80">or click to browse · Max 15MB</p>
-                          <span className={cn("btn-shine mt-8 inline-flex min-h-[44px] items-center rounded-xl px-10 py-3.5 text-sm font-semibold text-white shadow-lg", config.heroGradientClass)}>
-                            Choose File
-                          </span>
-                        </div>
-
-                        {config.layoutOptions?.demoChips?.length ? (
-                          <div className="mt-8">
-                            <p className="text-center text-xs font-semibold uppercase tracking-wider text-brand-muted">Or try an example</p>
-                            <div className="mt-3 flex flex-wrap justify-center gap-3">
-                              {config.layoutOptions.demoChips.map((chip) => (
-                                <button
-                                  key={chip.id}
-                                  type="button"
-                                  onClick={() => void loadDemo(chip.full)}
-                                  disabled={uploadLocked}
-                                  className="group flex items-center gap-2 rounded-full border border-brand-border bg-white px-3 py-1.5 shadow-sm transition-all duration-300 hover:border-brand-secondary/40 hover:shadow-md disabled:opacity-50"
-                                >
-                                  <Image src={chip.thumb} alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
-                                  <span className="text-xs font-medium text-brand-text group-hover:text-brand-secondary">{chip.label}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-                      </motion.div>
-                    ) : state === "processing" ? (
-                      <motion.div
-                        key="processing"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="space-y-6"
-                      >
-                        {localPreview && (
-                          <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-gray-50 p-3">
-                            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-200">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={localPreview} alt="Uploaded preview" className="h-full w-full object-cover" />
-                            </div>
-                            <div className="min-w-0 text-left">
-                              <p className="truncate text-sm font-medium text-gray-700">{fileInfo?.name}</p>
-                              {fileInfo && (
-                                <p className="text-xs text-gray-400">{formatBytes(fileInfo.size)}</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        <ProcessingAnimation progress={progress} active />
-                      </motion.div>
-                    ) : state === "error" && errorMessage ? (
-                      <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <ProcessingErrorCard
-                          message={errorMessage}
-                          onRetry={() => {
-                            if (lastFileRef.current) void runProcessing(lastFileRef.current);
-                          }}
-                          onReset={reset}
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="uploaded"
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex flex-col items-center gap-5 py-4 sm:flex-row sm:items-start"
-                      >
-                        <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl border border-gray-200 shadow-md sm:h-40 sm:w-40">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={localPreview!} alt="Uploaded preview" className="h-full w-full object-cover" />
-                        </div>
-                        <div className="flex-1 text-center sm:text-left">
-                          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
-                            <CheckCircle2 className="h-4 w-4" />
-                            Upload complete — see results below
-                          </span>
-                          {fileInfo && (
-                            <p className="mt-3 text-sm text-gray-500">
-                              {fileInfo.name} · {formatBytes(fileInfo.size)}
-                            </p>
-                          )}
-                          <button
-                            type="button"
-                            onClick={reset}
-                            className="mt-4 text-sm font-medium text-brand-secondary underline-offset-2 hover:underline"
-                          >
-                            Upload a different image
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              <div className="mt-5 flex flex-wrap justify-center gap-3 text-xs text-brand-muted/80">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1.5">
-                  <Lock className="h-3.5 w-3.5 text-brand-purple" aria-hidden />
-                  No signup required
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
-                  No watermark
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1.5">
-                  <Timer className="h-3.5 w-3.5 text-brand-accent" aria-hidden />
-                  Auto-delete in 1 hour
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <aside className="space-y-5 lg:sticky lg:top-28">
-            <PremiumCard className="p-6" glow>
-              <p className="text-xs font-bold uppercase tracking-wider text-brand-secondary">Why use this tool</p>
-              <ul className="mt-4 space-y-3">
-                {config.features.slice(0, 4).map((f) => (
-                  <li key={f.title} className="flex gap-3">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                    <div>
-                      <p className="text-sm font-semibold text-brand-text">{f.title}</p>
-                      <p className="text-xs leading-relaxed text-brand-muted">{f.description}</p>
-                    </div>
+      <ToolWorkspace
+        aside={
+          <div className="space-y-4">
+            <div className="border border-white/10 bg-white/[0.04] p-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-secondary">
+                Why this tool
+              </p>
+              <ul className="mt-5 space-y-4">
+                {config.features.slice(0, 4).map((f, i) => (
+                  <li key={f.title} className="border-t border-white/10 pt-4 first:border-0 first:pt-0">
+                    <p className="text-xs font-bold tabular-nums text-white/25">
+                      {String(i + 1).padStart(2, "0")}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-white">{f.title}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/45">{f.description}</p>
                   </li>
                 ))}
               </ul>
-            </PremiumCard>
-            <Button shine className={cn("min-h-[44px] w-full", config.heroGradientClass)} onClick={() => open()} disabled={uploadLocked}>
+            </div>
+            <Button
+              shine
+              className="btn-gradient min-h-[48px] w-full"
+              onClick={() => open()}
+              disabled={uploadLocked}
+            >
               {config.ctaLabel}
               <ArrowRight className="h-4 w-4" />
             </Button>
-          </aside>
-        </div>
-      </SectionShell>
+          </div>
+        }
+      >
+        <div>
+          <p className="studio-label">Workspace</p>
+          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Upload. Process. <span className="text-brand-secondary">Export.</span>
+          </h2>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/50">
+            Drop a photo below. Processing runs here — results appear in a dedicated section when ready.
+          </p>
 
-      {/* ——— Results only (separate section below) ——— */}
+          <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
+            <span className="inline-flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-brand-secondary" /> ~2s typical
+            </span>
+            <span>JPG · PNG · WEBP</span>
+            <span>Max 15MB</span>
+          </div>
+
+          <div className="mt-8">
+            <ToolDropzoneFrame active={isDragActive}>
+              <div className="p-5 sm:p-7">
+                <AnimatePresence mode="wait">
+                  {!showUploadContent ? (
+                    <motion.div key="dropzone" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <div
+                        {...getRootProps()}
+                        className={cn(
+                          "flex min-h-[280px] cursor-pointer flex-col items-center justify-center border border-dashed px-5 py-10 transition-colors",
+                          isDragActive
+                            ? "border-brand-secondary bg-brand-secondary/10"
+                            : "border-white/20 bg-white/[0.03] hover:border-brand-secondary/50"
+                        )}
+                      >
+                        <input {...getInputProps()} aria-label={config.uploadLabel} />
+                        <div className="flex h-14 w-14 items-center justify-center bg-brand-secondary text-brand-navy">
+                          <Upload className="h-6 w-6" />
+                        </div>
+                        <p className="mt-5 font-display text-xl font-bold text-white sm:text-2xl">
+                          Drop your image here
+                        </p>
+                        <p className="mt-2 text-sm text-white/45">or click to browse · Max 15MB</p>
+                        <span className="btn-gradient mt-7 inline-flex min-h-[44px] items-center px-8 text-sm font-semibold text-brand-navy">
+                          Choose File
+                        </span>
+                      </div>
+
+                      {config.layoutOptions?.demoChips?.length ? (
+                        <div className="mt-6">
+                          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-white/35">
+                            Or try a sample
+                          </p>
+                          <div className="mt-3 flex flex-wrap justify-center gap-2">
+                            {config.layoutOptions.demoChips.map((chip) => (
+                              <button
+                                key={chip.id}
+                                type="button"
+                                onClick={() => void loadDemo(chip.full)}
+                                disabled={uploadLocked}
+                                className="group flex items-center gap-2 border border-white/12 bg-white/[0.04] px-2.5 py-1.5 transition-colors hover:border-brand-secondary/50 disabled:opacity-50"
+                              >
+                                <Image src={chip.thumb} alt="" width={28} height={28} className="h-7 w-7 object-cover" />
+                                <span className="text-xs font-medium text-white/70 group-hover:text-brand-secondary">
+                                  {chip.label}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </motion.div>
+                  ) : state === "processing" ? (
+                    <motion.div
+                      key="processing"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <ProcessingAnimation
+                        progress={progress}
+                        active
+                        previewUrl={localPreview}
+                        hintText="Almost done — finishing your cutout"
+                      />
+                    </motion.div>
+                  ) : state === "error" && errorMessage ? (
+                    <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <ProcessingErrorCard
+                        message={errorMessage}
+                        onRetry={() => {
+                          if (lastFileRef.current) void runProcessing(lastFileRef.current);
+                        }}
+                        onReset={reset}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="uploaded"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center gap-5 py-4 sm:flex-row sm:items-start"
+                    >
+                      <div className="relative h-32 w-32 shrink-0 overflow-hidden border border-white/15 sm:h-40 sm:w-40">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={localPreview!} alt="Uploaded preview" className="h-full w-full object-cover" />
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <span className="inline-flex items-center gap-2 border border-brand-secondary/40 bg-brand-secondary/10 px-3 py-2 text-sm font-medium text-brand-secondary">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Ready — see results below
+                        </span>
+                        {fileInfo && (
+                          <p className="mt-3 text-sm text-white/45">
+                            {fileInfo.name} · {formatBytes(fileInfo.size)}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={reset}
+                          className="mt-4 text-sm font-medium text-brand-secondary underline-offset-2 hover:underline"
+                        >
+                          Upload a different image
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </ToolDropzoneFrame>
+
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/40">
+              <span className="inline-flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-brand-secondary" /> No signup
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-brand-secondary" /> No watermark
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Timer className="h-3.5 w-3.5 text-brand-secondary" /> Auto-delete in 1 hour
+              </span>
+            </div>
+          </div>
+        </div>
+      </ToolWorkspace>
+
       <AnimatePresence>
         {state === "success" && originalUrl && processedUrl && fileInfo && (
           <motion.div
@@ -455,7 +455,7 @@ export function RemoveBgUpload({
             exit={{ opacity: 0 }}
           >
             <ResultSection
-              originalUrl={originalUrl}
+              originalUrl={localPreview || originalUrl}
               processedUrl={processedUrl}
               originalSize={fileInfo.size}
               processedSize={processedSize}
@@ -463,6 +463,12 @@ export function RemoveBgUpload({
               heroGradientClass={config.heroGradientClass}
               downloadLabel={config.downloadLabel}
               successLabel={config.successLabel}
+              useCompareSlider
+              originalAlt="Original uploaded image before background removal"
+              processedAlt="Processed image with transparent background"
+              processedLabel="Transparent PNG"
+              checkerboardProcessed
+              imageType={imageType}
               onReset={reset}
               onDownload={() => void downloadProcessed()}
               onCopyLink={() => {
@@ -470,7 +476,6 @@ export function RemoveBgUpload({
                 showToast("Link copied to clipboard");
               }}
               onTweet={tweet}
-              useCompareSlider
             />
           </motion.div>
         )}

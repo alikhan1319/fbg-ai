@@ -1,38 +1,35 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/constants";
 import { type ToolPageConfig } from "@/components/tool/ToolLayout";
 import { ToolPageWrapper } from "@/components/tool/ToolPageWrapper";
-import { ToolSoftwareApplicationSchema } from "@/components/tool/ToolSchemas";
+import {
+  BreadcrumbSchema,
+  ToolSoftwareApplicationSchema,
+  ToolWebPageSchema,
+} from "@/components/tool/ToolSchemas";
+import { UPSCALE_SEO, toolOgImage } from "@/lib/seo";
 
-const urlPath = "/upscale";
-const og = `${SITE_URL.replace(/\/$/, "")}${urlPath}/opengraph-image`;
+const urlPath = UPSCALE_SEO.path;
+const og = toolOgImage(urlPath);
 
 export const metadata: Metadata = {
-  title: "Free AI Image Upscaler | Upscale Photos 2x / 4x Online",
-  description:
-    "Upscale images 2× or 4× with FBR AI. Enhance resolution, sharpen details, and reduce noise for crisp results. Fast, free to start, no signup.",
-  keywords: [
-    "image upscaler",
-    "upscale image",
-    "enhance image resolution",
-    "4x upscaler",
-    "2x upscaler",
-    "AI upscaler",
-  ],
-  alternates: { canonical: urlPath },
+  title: UPSCALE_SEO.title,
+  description: UPSCALE_SEO.description,
+  keywords: [...UPSCALE_SEO.keywords],
+  alternates: { canonical: UPSCALE_SEO.canonical },
   openGraph: {
-    title: "Free AI Image Upscaler - FBR AI",
-    description: "Upscale photos 2× / 4× with sharp details and natural textures.",
+    title: UPSCALE_SEO.title,
+    description: UPSCALE_SEO.description,
     url: urlPath,
     type: "website",
-    images: [{ url: og, width: 1200, height: 630, alt: "FBR AI Image Upscaler" }],
+    images: [{ url: og, width: 1200, height: 630, alt: "FBG AI Image Upscaler" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free AI Image Upscaler - FBR AI",
-    description: "Upscale images 2× or 4× in seconds.",
+    title: UPSCALE_SEO.title,
+    description: UPSCALE_SEO.description,
     images: [og],
   },
+  robots: { index: true, follow: true },
 };
 
 const config: ToolPageConfig = {
@@ -141,9 +138,20 @@ const config: ToolPageConfig = {
 export default function UpscalePage() {
   return (
     <>
+      <ToolWebPageSchema
+        name={UPSCALE_SEO.title}
+        description={UPSCALE_SEO.description}
+        urlPath={urlPath}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Image Upscaler", path: urlPath },
+        ]}
+      />
       <ToolSoftwareApplicationSchema
-        name="FBR AI Image Upscaler"
-        description={metadata.description as string}
+        name="FBG AI Image Upscaler"
+        description={UPSCALE_SEO.description}
         urlPath={urlPath}
       />
       <ToolPageWrapper config={config} />

@@ -1,11 +1,11 @@
 """
-FBR AI — Professional background removal API (single-file backend)
+FBG AI — Professional background removal API (single-file backend)
 
 Features:
-  - Advanced rembg model (birefnet-general → isnet-general-use fallback)
-  - Alpha matting for hair, fur, text edges, and fine details
+  - Segmentation stack: SAM2 prior → BiRefNet → PyMatting (CUDA-aware, lazy)
+  - Subject analysis: lock main object, drop floating scraps
+  - Guided-filter smooth edges + color decontamination
   - Foreground preserved: text, logos, graphics stay intact
-  - Transparent PNG output
   - Auto cleanup of uploads after 1 hour
 
 Run (from backend folder):
@@ -42,7 +42,7 @@ from fastapi.staticfiles import StaticFiles
 import cv2
 import numpy as np
 from PIL import Image, ImageOps, UnidentifiedImageError
-from rembg import new_session, remove
+from segmentation import get_pipeline
 try:
     from advanced_upscale import upscale_image_bytes as advanced_upscale_image_bytes
     ADVANCED_UPSCALE_AVAILABLE = True
@@ -79,9 +79,10 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_FILE_BYTES = 15 * 1024 * 1024
-MAX_EDGE_PX = 1536  # tighter cap for consistent 2–3s CPU response on common photos
-MAX_WHITE_BFS_PIXELS = 2_000_000  # skip slow Python flood-fill on very large images
-API_BUILD = "2026-05-30-testimonials-v1"  # bump when deploy/restart required
+# Working max edge for cutouts (SEG_MAX_EDGE preferred; REMBG_MAX_EDGE still accepted)
+MAX_EDGE_PX = int(os.getenv("SEG_MAX_EDGE", os.getenv("REMBG_MAX_EDGE", "1024")))
+MAX_WHITE_BFS_PIXELS = 900_000  # logos/graphics only — never on large photos
+API_BUILD = "2026-08-06-signature-clear-v8"  # bump when deploy/restart required
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 FILE_TTL_SECONDS = 3600
 MAX_UPSCALE_OUTPUT_EDGE = 4096
@@ -99,49 +100,36 @@ CORS_ORIGINS = env_list(
     "http://localhost:3000,http://127.0.0.1:3000",
 )
 
-# Model preference for production speed + quality.
-# We intentionally load only ONE model at startup to avoid long boot times.
-REMBG_MODEL_CANDIDATES = (
-    "u2netp",  # lightweight and fast for general photos/products
-    "birefnet-general",  # higher quality fallback for hard edges/details
-)
-
-# Alpha matting = cleaner edges around hair, fur, and semi-transparent areas
-ALPHA_MATTING = True
-ALPHA_FG_THRESHOLD = 240
-ALPHA_BG_THRESHOLD = 15
-ALPHA_ERODE = 8
+# Legacy polish knobs (still used by signature/logo white-bg path + GrabCut helpers)
+ALPHA_MATTING = os.getenv("SEG_DISABLE_MATTING", "0").strip() in {"0", "false", "False", "no"}
+ALPHA_FG_THRESHOLD = int(os.getenv("MATTING_FG", os.getenv("REMBG_ALPHA_FG", "240")))
+ALPHA_BG_THRESHOLD = int(os.getenv("MATTING_BG", os.getenv("REMBG_ALPHA_BG", "10")))
+ALPHA_ERODE = int(os.getenv("MATTING_ERODE", os.getenv("REMBG_ALPHA_ERODE", "10")))
+ALPHA_MATTING_MAX_EDGE = int(os.getenv("MATTING_MAX_EDGE", os.getenv("REMBG_ALPHA_MATTING_MAX_EDGE", "1024")))
+REMBG_GRABCUT = os.getenv("REMBG_GRABCUT", "0").strip() not in {"0", "false", "False", "no"}
 
 # ---------------------------------------------------------------------------
 # Global state (loaded once at startup)
 # ---------------------------------------------------------------------------
-rembg_sessions: dict[str, Any] = {}
-active_model_name: str = "unknown"
+active_model_name: str = "sam2+birefnet+pymatting"
 advanced_upscale_ready: bool = False
 advanced_upscale_error: str | None = None
 executor = ThreadPoolExecutor(max_workers=2)
 upscale_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="upscale")
 
 
-def _load_rembg_sessions() -> None:
-    """Load only the first available model to keep startup fast and stable."""
-    global rembg_sessions, active_model_name
-    rembg_sessions = {}
-
-    for model_name in REMBG_MODEL_CANDIDATES:
-        try:
-            logger.info("Loading rembg model: %s …", model_name)
-            rembg_sessions[model_name] = new_session(model_name)
-            logger.info("rembg model ready: %s", model_name)
-            # Stop after first successful model to prevent large startup downloads.
-            active_model_name = model_name
-            logger.info("Using model: %s", active_model_name)
-            return
-        except Exception as exc:
-            logger.warning("Could not load model %s: %s", model_name, exc)
-
-    if not rembg_sessions:
-        raise RuntimeError("No rembg model could be loaded. Run: pip install rembg[cpu]")
+def _init_segmentation_pipeline() -> None:
+    """Create lazy pipeline handle (models load on first /remove-bg)."""
+    global active_model_name
+    pipe = get_pipeline()
+    status = pipe.status()
+    active_model_name = status.get("pipeline", "sam2+birefnet+pymatting")
+    logger.info(
+        "Segmentation pipeline ready (lazy load): device=%s max_edge=%s pipeline=%s",
+        status.get("device"),
+        status.get("max_edge"),
+        active_model_name,
+    )
 
 
 def cleanup_expired_files() -> int:
@@ -161,15 +149,17 @@ def cleanup_expired_files() -> int:
 
 def _prepare_input_bytes(raw: bytes) -> tuple[bytes, tuple[int, int] | None]:
     """
-    Optionally downscale very large images for 1–3s CPU processing.
-    Returns (bytes_to_process, original_size_or_none_if_resized).
+    EXIF-correct + optionally downscale very large images for stable CPU processing.
+    Returns (bytes_to_process, original_size_or_none_if_not_resized).
     """
-    img = Image.open(io.BytesIO(raw))
+    img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw)))
     original_size = img.size
     w, h = img.size
 
     if max(w, h) <= MAX_EDGE_PX:
-        return raw, None
+        buf = io.BytesIO()
+        img.convert("RGBA").save(buf, format="PNG")
+        return buf.getvalue(), None
 
     scale = MAX_EDGE_PX / max(w, h)
     new_size = (max(1, int(w * scale)), max(1, int(h * scale)))
@@ -191,8 +181,10 @@ def _extract_alpha(image_bytes: bytes) -> np.ndarray:
 
 
 def _compose_png_with_alpha(raw: bytes, alpha: np.ndarray) -> bytes:
-    src = Image.open(io.BytesIO(raw)).convert("RGBA")
+    src = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGBA")
     arr = np.array(src)
+    if alpha.shape[:2] != arr.shape[:2]:
+        alpha = cv2.resize(alpha, (arr.shape[1], arr.shape[0]), interpolation=cv2.INTER_LINEAR)
     arr[:, :, 3] = alpha
     out = Image.fromarray(arr, mode="RGBA")
     buf = io.BytesIO()
@@ -200,34 +192,564 @@ def _compose_png_with_alpha(raw: bytes, alpha: np.ndarray) -> bytes:
     return buf.getvalue()
 
 
+def _guided_filter_alpha(alpha: np.ndarray, guide_rgb: np.ndarray, radius: int = 5, eps: float = 1e-3) -> np.ndarray:
+    """
+    Edge-aware alpha refine (He et al. guided filter).
+    Alpha edges snap to real image edges — hair/fur looks much closer to remove.bg.
+    """
+    I = cv2.cvtColor(guide_rgb, cv2.COLOR_RGB2GRAY).astype(np.float32) / 255.0
+    p = alpha.astype(np.float32) / 255.0
+    k = 2 * max(1, radius) + 1
+    mean_I = cv2.boxFilter(I, cv2.CV_32F, (k, k))
+    mean_p = cv2.boxFilter(p, cv2.CV_32F, (k, k))
+    mean_Ip = cv2.boxFilter(I * p, cv2.CV_32F, (k, k))
+    cov_Ip = mean_Ip - mean_I * mean_p
+    mean_II = cv2.boxFilter(I * I, cv2.CV_32F, (k, k))
+    var_I = mean_II - mean_I * mean_I
+    a = cov_Ip / (var_I + eps)
+    b = mean_p - a * mean_I
+    mean_a = cv2.boxFilter(a, cv2.CV_32F, (k, k))
+    mean_b = cv2.boxFilter(b, cv2.CV_32F, (k, k))
+    q = mean_a * I + mean_b
+    return np.clip(q * 255.0, 0.0, 255.0)
+
+
+def _estimate_bg_color(rgb: np.ndarray, alpha: np.ndarray) -> np.ndarray:
+    """Estimate dominant background color from near-transparent + border pixels."""
+    a = alpha.astype(np.float32) / 255.0
+    near_bg = a < 0.12
+    border = np.zeros_like(near_bg)
+    border[0, :] = True
+    border[-1, :] = True
+    border[:, 0] = True
+    border[:, -1] = True
+    sample = near_bg | (border & (a < 0.55))
+    if np.count_nonzero(sample) > 64:
+        return rgb[sample].mean(axis=0).astype(np.float32)
+    return np.array([255.0, 255.0, 255.0], dtype=np.float32)
+
+
+def _lock_subject_components(alpha: np.ndarray) -> np.ndarray:
+    """
+    Keep the real subject only. Drop floating text, bars, and graphic leftovers
+    (e.g. poster typography behind a car).
+    """
+    a = alpha.astype(np.uint8)
+    h_img, w_img = a.shape
+    img_area = float(a.size)
+
+    # Disconnect thin bridges so letter stems don't stick to the subject
+    binary = (a > 40).astype(np.uint8)
+    open_k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, open_k, iterations=1)
+
+    num, labels, stats, centroids = cv2.connectedComponentsWithStats(binary, connectivity=8)
+    if num <= 1:
+        return a
+
+    candidates: list[tuple[float, int]] = []
+    for i in range(1, num):
+        x, y, bw, bh, area = stats[i]
+        if area < max(64, int(0.0015 * img_area)):
+            continue
+        aspect_h = bh / max(float(bw), 1.0)  # tallness
+        aspect_w = bw / max(float(bh), 1.0)
+        # Reject typography / bar leftovers (tall thin strokes)
+        if aspect_h >= 2.8 and bw < 0.12 * w_img:
+            continue
+        if aspect_h >= 4.0:
+            continue
+        if area < 0.01 * img_area and aspect_h > 2.0:
+            continue
+
+        cy = float(centroids[i][1]) / float(h_img)
+        cx = float(centroids[i][0]) / float(w_img)
+        score = float(area)
+        # Prefer lower / center subjects (products, cars, people)
+        score *= 0.45 + 0.55 * cy
+        score *= 0.75 + 0.25 * (1.0 - abs(cx - 0.5) * 2.0)
+        # Prefer compact / wider blobs over skinny glyphs
+        score *= 0.65 + 0.35 * min(1.5, aspect_w)
+        candidates.append((score, i))
+
+    if not candidates:
+        # Fallback: largest blob only
+        areas = stats[1:, cv2.CC_STAT_AREA]
+        keep_ids = [1 + int(np.argmax(areas))]
+    else:
+        candidates.sort(reverse=True)
+        primary = candidates[0][1]
+        keep_ids = [primary]
+        px, py, pw, ph, _ = stats[primary]
+        primary_area = float(stats[primary, cv2.CC_STAT_AREA])
+        # Attach nearby pieces of the same object (mirrors, wheels) — not distant text
+        for score, i in candidates[1:]:
+            if float(stats[i, cv2.CC_STAT_AREA]) < 0.08 * primary_area:
+                continue
+            x, y, bw, bh, _ = stats[i]
+            # Must overlap primary bbox expanded a bit
+            pad = int(0.06 * max(h_img, w_img))
+            if (
+                x + bw < px - pad
+                or x > px + pw + pad
+                or y + bh < py - pad
+                or y > py + ph + pad
+            ):
+                continue
+            keep_ids.append(i)
+
+    keep = np.zeros_like(binary)
+    for i in keep_ids:
+        keep[labels == i] = 1
+
+    rad = max(2, int(round(0.003 * max(h_img, w_img))))
+    rad = min(rad, 10)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * rad + 1, 2 * rad + 1))
+    keep_soft = cv2.dilate(keep, kernel, iterations=1)
+
+    out = a.astype(np.float32)
+    out[keep_soft == 0] = 0
+    # Extra: wipe non-subject pixels in the upper band (LC300-style text zone)
+    _, py, _, _, _ = stats[keep_ids[0]]
+    wipe_y = max(0, int(py - 0.015 * h_img))
+    if wipe_y > 4:
+        band = out[:wipe_y, :]
+        band_keep = keep_soft[:wipe_y, :]
+        band[band_keep == 0] = 0
+        out[:wipe_y, :] = band
+    return np.clip(out, 0, 255).astype(np.uint8)
+
+
+def _strip_thin_artifacts(alpha: np.ndarray) -> np.ndarray:
+    """Remove leftover thin vertical bars / glyph stems after subject lock."""
+    a = alpha.astype(np.uint8)
+    binary = (a > 30).astype(np.uint8)
+    num, labels, stats, _ = cv2.connectedComponentsWithStats(binary, connectivity=8)
+    if num <= 1:
+        return a
+    h_img, w_img = a.shape
+    out = a.copy()
+    main_area = int(stats[1:, cv2.CC_STAT_AREA].max()) if num > 1 else 0
+    for i in range(1, num):
+        x, y, bw, bh, area = stats[i]
+        aspect = bh / max(float(bw), 1.0)
+        # Thin tall leftovers (text stems) relative to main subject
+        if area < 0.25 * main_area and aspect >= 2.4 and bw < 0.1 * w_img:
+            out[labels == i] = 0
+        elif area < 0.04 * main_area and aspect >= 1.8:
+            out[labels == i] = 0
+    return out
+
+
+def _clear_corner_background(alpha: np.ndarray, rgb: np.ndarray) -> np.ndarray:
+    """
+    Remove leftover background stuck on corners/borders.
+    Flood from edges through weak / BG-colored pixels; never eat solid subject.
+    """
+    h, w = alpha.shape
+    a = alpha.astype(np.float32)
+    rgb_f = rgb.astype(np.float32)
+    bg = _estimate_bg_color(rgb_f, alpha)
+    color_dist = np.linalg.norm(rgb_f - bg, axis=2)
+
+    likely_bg = (a < 120) | ((a < 210) & (color_dist < 52))
+    likely_bg &= a < 235
+
+    visited = np.zeros((h, w), dtype=bool)
+    q: deque[tuple[int, int]] = deque()
+
+    for x in range(w):
+        if likely_bg[0, x]:
+            q.append((0, x))
+        if likely_bg[h - 1, x]:
+            q.append((h - 1, x))
+    for y in range(h):
+        if likely_bg[y, 0]:
+            q.append((y, 0))
+        if likely_bg[y, w - 1]:
+            q.append((y, w - 1))
+
+    while q:
+        y, x = q.popleft()
+        if y < 0 or y >= h or x < 0 or x >= w:
+            continue
+        if visited[y, x] or not likely_bg[y, x]:
+            continue
+        visited[y, x] = True
+        q.append((y - 1, x))
+        q.append((y + 1, x))
+        q.append((y, x - 1))
+        q.append((y, x + 1))
+
+    out = a.copy()
+    out[visited] = 0
+
+    band = max(2, int(0.012 * max(h, w)))
+    border = np.zeros((h, w), dtype=bool)
+    border[:band, :] = True
+    border[-band:, :] = True
+    border[:, :band] = True
+    border[:, -band:] = True
+    corner_mess = border & (out < 200) & (color_dist < 60)
+    out[corner_mess] = 0
+    return np.clip(out, 0, 255).astype(np.uint8)
+
+
+def _grabcut_refine_alpha(rgb: np.ndarray, alpha: np.ndarray) -> np.ndarray:
+    """
+    Second-pass object-vs-background analysis (GrabCut) using rembg as prior.
+    Clarifies subject vs leftover BG without deleting solid object cores.
+    """
+    h, w = alpha.shape
+    max_gc = 960
+    scale = 1.0
+    if max(h, w) > max_gc:
+        scale = max_gc / float(max(h, w))
+        sw, sh = max(1, int(w * scale)), max(1, int(h * scale))
+        small_rgb = cv2.resize(rgb, (sw, sh), interpolation=cv2.INTER_AREA)
+        small_a = cv2.resize(alpha, (sw, sh), interpolation=cv2.INTER_LINEAR)
+    else:
+        small_rgb, small_a = rgb, alpha
+
+    gc = np.full(small_a.shape, cv2.GC_PR_BGD, dtype=np.uint8)
+    gc[small_a <= 10] = cv2.GC_BGD
+    gc[small_a >= 245] = cv2.GC_FGD
+    gc[(small_a > 10) & (small_a < 128)] = cv2.GC_PR_BGD
+    gc[(small_a >= 128) & (small_a < 245)] = cv2.GC_PR_FGD
+
+    if not np.any(gc == cv2.GC_FGD) or not np.any(gc == cv2.GC_BGD):
+        return alpha
+
+    bgd = np.zeros((1, 65), np.float64)
+    fgd = np.zeros((1, 65), np.float64)
+    try:
+        cv2.grabCut(small_rgb, gc, None, bgd, fgd, 4, cv2.GC_INIT_WITH_MASK)
+    except Exception as exc:
+        logger.warning("GrabCut refine skipped: %s", exc)
+        return alpha
+
+    mask = np.where(
+        (gc == cv2.GC_FGD) | (gc == cv2.GC_PR_FGD),
+        1.0,
+        0.0,
+    ).astype(np.float32)
+    mask = cv2.GaussianBlur(mask, (0, 0), sigmaX=1.15, sigmaY=1.15)
+
+    if scale < 1.0:
+        mask = cv2.resize(mask, (w, h), interpolation=cv2.INTER_LINEAR)
+
+    a0 = alpha.astype(np.float32) / 255.0
+    blended = a0.copy()
+    uncertain = (a0 > 0.06) & (a0 < 0.92)
+    blended = np.where(uncertain, 0.40 * a0 + 0.60 * mask, blended)
+    blended = np.where(
+        (mask < 0.22) & (a0 < 0.94),
+        blended * np.clip(mask * 1.4, 0.0, 1.0),
+        blended,
+    )
+    blended = np.where(a0 >= 0.95, np.maximum(blended, a0), blended)
+    return np.clip(blended * 255.0, 0, 255).astype(np.uint8)
+
+
+def _refine_cutout_rgba(rgba: np.ndarray, image_type: str = "general") -> np.ndarray:
+    """
+    Type-aware polish:
+      human/passport → preserve soft edges (hair), light cleanup only
+      signature/logo → keep ink/graphics, gentle lock
+      vehicle/graphic → remove poster-text leftovers without eating the object
+      product/general → balanced cleanup
+    """
+    if rgba.ndim != 3 or rgba.shape[2] != 4:
+        return rgba
+
+    out = rgba.copy()
+    rgb_u8 = out[:, :, :3]
+    alpha_u8 = out[:, :, 3]
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    alpha_u8 = cv2.morphologyEx(alpha_u8, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+    if image_type in {"human", "passport"}:
+        # Never run thick-core / text strip — they carve people and hair
+        alpha_u8 = _lock_subject_soft(alpha_u8)
+        alpha_u8 = _clear_corner_background(alpha_u8, rgb_u8)
+        guide_r, guide_eps = 5, 5e-4
+        fog_cut = 0.03
+    elif image_type in {"signature", "logo"}:
+        alpha_u8 = _lock_subject_soft(alpha_u8)
+        alpha_u8 = _clear_corner_background(alpha_u8, rgb_u8)
+        guide_r, guide_eps = 3, 1e-3
+        fog_cut = 0.05
+    elif image_type in {"vehicle", "graphic"}:
+        # Poster text / LC300 leftovers only — mild thick core
+        alpha_u8 = _keep_thick_subject(alpha_u8, aggressive=False)
+        alpha_u8 = _lock_subject_components(alpha_u8)
+        alpha_u8 = _strip_thin_artifacts(alpha_u8)
+        alpha_u8 = _clear_corner_background(alpha_u8, rgb_u8)
+        guide_r, guide_eps = 4, 8e-4
+        fog_cut = 0.04
+    else:
+        # product / general
+        alpha_u8 = _lock_subject_components(alpha_u8)
+        alpha_u8 = _clear_corner_background(alpha_u8, rgb_u8)
+        guide_r, guide_eps = 4, 8e-4
+        fog_cut = 0.04
+
+    if REMBG_GRABCUT and image_type not in {"signature", "logo"}:
+        alpha_u8 = _grabcut_refine_alpha(rgb_u8, alpha_u8)
+        if image_type in {"vehicle", "graphic"}:
+            alpha_u8 = _keep_thick_subject(alpha_u8, aggressive=False)
+            alpha_u8 = _strip_thin_artifacts(alpha_u8)
+
+    alpha = _guided_filter_alpha(alpha_u8, rgb_u8, radius=guide_r, eps=guide_eps)
+    solid = (alpha_u8 >= 245) | (alpha_u8 <= 6)
+    alpha = np.where(solid, alpha_u8.astype(np.float32), alpha)
+
+    a01 = np.clip(alpha / 255.0, 0.0, 1.0)
+    fringe = (a01 > 0.02) & (a01 < 0.98)
+    curved = a01 * a01 * (3.0 - 2.0 * a01)
+    # Humans keep softer fringe; products get slightly firmer edges
+    mix = 0.35 if image_type in {"human", "passport"} else 0.55
+    a01 = np.where(fringe, (1.0 - mix) * a01 + mix * curved, a01)
+
+    rgb = rgb_u8.astype(np.float32)
+    bg_mean = _estimate_bg_color(rgb, (a01 * 255).astype(np.uint8))
+    fringe2 = (a01 > 0.03) & (a01 < 0.96)
+    if np.any(fringe2):
+        eps = 0.05
+        clean = (rgb - bg_mean * (1.0 - a01)[..., None]) / np.maximum(a01[..., None], eps)
+        clean = np.clip(clean, 0.0, 255.0)
+        decontam = 1.15 if image_type in {"human", "passport"} else 1.45
+        blend = np.clip((1.0 - a01) * decontam, 0.15, 0.92)
+        rgb = np.where(
+            fringe2[..., None],
+            rgb * (1.0 - blend[..., None]) + clean * blend[..., None],
+            rgb,
+        )
+
+    a01 = np.where(a01 < fog_cut, 0.0, a01)
+    a01 = np.where(a01 > 0.98, 1.0, a01)
+
+    out[:, :, :3] = np.clip(rgb, 0, 255).astype(np.uint8)
+    out[:, :, 3] = np.clip(a01 * 255.0, 0, 255).astype(np.uint8)
+    transparent = out[:, :, 3] == 0
+    out[transparent, 0:3] = 0
+    return out
+
+
+def _lock_subject_soft(alpha: np.ndarray) -> np.ndarray:
+    """Drop only tiny speckles — never carve the main subject (people/hair/ink)."""
+    a = alpha.astype(np.uint8)
+    binary = (a > 28).astype(np.uint8)
+    num, labels, stats, _ = cv2.connectedComponentsWithStats(binary, connectivity=8)
+    if num <= 1:
+        return a
+    img_area = float(a.size)
+    min_area = max(24, int(0.0008 * img_area))
+    out = a.copy()
+    for i in range(1, num):
+        if int(stats[i, cv2.CC_STAT_AREA]) < min_area:
+            out[labels == i] = 0
+    return out
+
+
+def _keep_thick_subject(alpha: np.ndarray, aggressive: bool = False) -> np.ndarray:
+    """
+    Keep thick object cores and drop thin graphic leftovers.
+    Mild by default so mirrors/antenna/hair tips are not deleted.
+    """
+    a = alpha.astype(np.uint8)
+    binary = (a > 36).astype(np.uint8)
+    if int(binary.sum()) < 64:
+        return a
+
+    dist = cv2.distanceTransform(binary, cv2.DIST_L2, 5)
+    thr = max(4.0, (0.016 if aggressive else 0.011) * float(max(a.shape)))
+    core = (dist >= thr).astype(np.uint8)
+    num, labels, stats, _ = cv2.connectedComponentsWithStats(core, connectivity=8)
+    if num <= 1:
+        thr = max(3.0, thr * 0.7)
+        core = (dist >= thr).astype(np.uint8)
+        num, labels, stats, _ = cv2.connectedComponentsWithStats(core, connectivity=8)
+        if num <= 1:
+            return a
+
+    areas = stats[1:, cv2.CC_STAT_AREA]
+    primary = 1 + int(np.argmax(areas))
+    core_keep = (labels == primary).astype(np.uint8)
+
+    grow = max(4, int(round(thr)) + 2)
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * grow + 1, 2 * grow + 1))
+    soft = cv2.dilate(core_keep, k, iterations=1) & binary
+    step = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    for _ in range(10 if not aggressive else 6):
+        nxt = cv2.dilate(soft, step, iterations=1) & binary
+        if np.array_equal(nxt, soft):
+            break
+        soft = nxt
+
+    out = a.astype(np.float32)
+    out[soft == 0] = 0
+    return np.clip(out, 0, 255).astype(np.uint8)
+
+
 def _is_white_like(pixel: np.ndarray, threshold: int = 242, max_chroma: int = 20) -> bool:
     r, g, b = int(pixel[0]), int(pixel[1]), int(pixel[2])
     return r >= threshold and g >= threshold and b >= threshold and (max(r, g, b) - min(r, g, b) <= max_chroma)
 
 
+def _restore_to_original_size(rgba: np.ndarray, original_size: tuple[int, int]) -> np.ndarray:
+    """Upscale cutout back to original size with edge-aware alpha."""
+    ow, oh = original_size
+    if rgba.shape[1] == ow and rgba.shape[0] == oh:
+        return rgba
+    rgb = cv2.resize(rgba[:, :, :3], (ow, oh), interpolation=cv2.INTER_LANCZOS4)
+    alpha = cv2.resize(rgba[:, :, 3].astype(np.float32), (ow, oh), interpolation=cv2.INTER_LINEAR)
+    alpha = _guided_filter_alpha(alpha.astype(np.uint8), rgb, radius=3, eps=1e-3)
+    alpha = _clear_corner_background(alpha.astype(np.uint8), rgb)
+    return np.dstack([rgb, np.clip(alpha, 0, 255).astype(np.uint8)])
+
+
+def _classify_image_type(rgb: np.ndarray) -> str:
+    """
+    Phase 1 — classify user image:
+    signature | logo | passport | human | vehicle | product | graphic | general
+    """
+    h, w = rgb.shape[:2]
+    gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
+    aspect = h / max(float(w), 1.0)
+
+    border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]], axis=0)
+    border_white = float(
+        np.mean(
+            (border[:, 0] >= 235) & (border[:, 1] >= 235) & (border[:, 2] >= 235)
+            & ((border.max(axis=1) - border.min(axis=1)) <= 24)
+        )
+    )
+    bright = float(np.mean(gray > 200))
+    dark = float(np.mean(gray < 55))
+    mid = float(np.mean((gray > 55) & (gray < 200)))
+    edges = cv2.Canny(gray, 70, 150)
+    edge_ratio = float(np.mean(edges > 0))
+
+    # Skin-ish (HSV)
+    hch, sch, vch = hsv[:, :, 0], hsv[:, :, 1], hsv[:, :, 2]
+    skin = ((hch <= 25) | (hch >= 160)) & (sch >= 25) & (sch <= 180) & (vch >= 50) & (vch <= 250)
+    skin_ratio = float(np.mean(skin))
+
+    # Sparse ink on paper → signature
+    if border_white > 0.55 and bright > 0.55 and dark < 0.18 and mid < 0.32 and edge_ratio < 0.11:
+        if dark < 0.10:
+            return "signature"
+        return "logo"
+
+    # Brand / logo graphics on light
+    if border_white > 0.5 and bright > 0.45 and mid < 0.38 and edge_ratio > 0.05:
+        return "logo"
+
+    # People
+    if skin_ratio > 0.07:
+        if aspect > 1.12 and bright > 0.22 and skin_ratio > 0.09:
+            return "passport"
+        return "human"
+
+    # Product on studio white
+    if border_white > 0.5 and bright > 0.35 and mid < 0.45:
+        return "product"
+
+    # Dark poster / vehicle promo (LC300-style)
+    if dark > 0.2 and bright < 0.3 and edge_ratio > 0.035:
+        return "graphic"
+
+    # Wide metallic-ish lower subject → vehicle lean
+    if aspect < 0.95 and dark > 0.15 and mid > 0.25:
+        return "vehicle"
+
+    return "general"
+
+
+def _refine_type_with_mask(image_type: str, alpha: np.ndarray) -> str:
+    """Phase 2 assist — refine class using AI mask geometry."""
+    a = alpha > 40
+    if not np.any(a):
+        return image_type
+    ys, xs = np.where(a)
+    y0, y1 = int(ys.min()), int(ys.max())
+    x0, x1 = int(xs.min()), int(xs.max())
+    h, w = alpha.shape
+    bw, bh = x1 - x0 + 1, y1 - y0 + 1
+    cy = ((y0 + y1) * 0.5) / max(h, 1)
+    fg = float(np.mean(a))
+    box_aspect = bw / max(float(bh), 1.0)
+
+    # Poster typography leftovers: multiple tall thin blobs in the upper half
+    binary = a.astype(np.uint8)
+    num, labels, stats, _ = cv2.connectedComponentsWithStats(binary, connectivity=8)
+    thin_upper = 0
+    for i in range(1, num):
+        _x, y, bw_i, bh_i, area = stats[i]
+        if area < 40:
+            continue
+        if y < 0.45 * h and bh_i / max(float(bw_i), 1.0) >= 2.2 and bw_i < 0.14 * w:
+            thin_upper += 1
+    if thin_upper >= 2 and image_type in {"general", "product", "graphic", "vehicle"}:
+        return "graphic"
+
+    if image_type == "graphic" and box_aspect > 1.15 and cy > 0.45:
+        return "vehicle"
+    if image_type == "general" and fg < 0.35 and cy > 0.5 and box_aspect > 1.2:
+        return "vehicle"
+    if image_type == "general" and fg < 0.2 and bh < 0.45 * h and cy < 0.55:
+        return "logo"
+    return image_type
+
+
+def _make_background_sheet(rgb: np.ndarray, alpha: np.ndarray) -> np.ndarray:
+    """Sheet 1 — background plate (object area filled with estimated BG)."""
+    a = alpha.astype(np.float32) / 255.0
+    bg = _estimate_bg_color(rgb.astype(np.float32), alpha)
+    out = rgb.astype(np.float32)
+    # Softly replace object with background color so the plate is clear
+    out = out * (1.0 - a)[..., None] + bg * a[..., None]
+    return np.clip(out, 0, 255).astype(np.uint8)
+
+
+def _png_bytes(rgba_or_rgb: np.ndarray) -> bytes:
+    if rgba_or_rgb.shape[2] == 4:
+        img = Image.fromarray(rgba_or_rgb, mode="RGBA")
+    else:
+        img = Image.fromarray(rgba_or_rgb, mode="RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    return buf.getvalue()
+
+
 def _remove_white_background_connected(raw: bytes) -> bytes | None:
     """
     Remove only white-ish background connected to image borders.
-    This preserves internal logo/text/graphics details and is ideal
-    for brand marks on white backgrounds.
-    Returns PNG bytes or None when this strategy is not applicable.
+    Only for small graphic/logo images — never on photos (would look worse than rembg).
     """
-    img = Image.open(io.BytesIO(raw)).convert("RGB")
+    img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
     rgb = np.array(img)
     h, w, _ = rgb.shape
     total = h * w
-    if total > MAX_WHITE_BFS_PIXELS:
-        # Avoid long per-pixel BFS on large photos.
+    if total > MAX_WHITE_BFS_PIXELS or max(h, w) > 1400:
+        return None
+
+    gray = rgb.mean(axis=2)
+    # Photos have continuous tones; logos/graphics are high-contrast with few midtones
+    mid_ratio = float(np.mean((gray > 40) & (gray < 220)))
+    if mid_ratio > 0.55:
         return None
 
     border = np.concatenate([rgb[0, :, :], rgb[-1, :, :], rgb[:, 0, :], rgb[:, -1, :]], axis=0)
     border_white = np.mean(
         np.array([_is_white_like(px, threshold=240, max_chroma=22) for px in border], dtype=np.float32)
     )
-    if border_white < 0.62:
+    if border_white < 0.72:
         return None
 
-    white_mask = np.zeros((h, w), dtype=bool)
     # Vectorized white-like check
     min_c = rgb.min(axis=2)
     max_c = rgb.max(axis=2)
@@ -258,110 +780,50 @@ def _remove_white_background_connected(raw: bytes) -> bytes | None:
     bg_mask = visited
     fg_ratio = 1.0 - (float(np.count_nonzero(bg_mask)) / float(total))
     # Reject if this heuristic would over-remove or under-remove
-    if fg_ratio < 0.01 or fg_ratio > 0.92:
+    if fg_ratio < 0.01 or fg_ratio > 0.88:
         return None
 
-    alpha = np.full((h, w), 255, dtype=np.uint8)
+    alpha = np.full((h, w), 255, dtype=np.float32)
     alpha[bg_mask] = 0
-    return _compose_png_with_alpha(raw, alpha)
+    # Soften hard flood-fill edges for less jaggy logo cutouts
+    alpha = cv2.GaussianBlur(alpha, (0, 0), sigmaX=0.9, sigmaY=0.9)
+    alpha_u8 = np.clip(alpha, 0, 255).astype(np.uint8)
+    return _compose_png_with_alpha(raw, alpha_u8)
 
 
-def _run_rembg_candidate(raw: bytes, model_name: str, session: Any) -> tuple[bytes, float]:
-    use_alpha = model_name != "u2netp"
-    output_bytes = remove(
-        raw,
-        session=session,
-        alpha_matting=ALPHA_MATTING if use_alpha else False,
-        alpha_matting_foreground_threshold=ALPHA_FG_THRESHOLD,
-        alpha_matting_background_threshold=ALPHA_BG_THRESHOLD,
-        alpha_matting_erode_size=ALPHA_ERODE,
-        post_process_mask=True,
-    )
-    score = _foreground_ratio(_extract_alpha(output_bytes))
-    return output_bytes, score
-
-
-def _select_model_order(raw: bytes) -> list[str]:
+def _mask_quality_score(alpha: np.ndarray) -> float:
     """
-    Heuristic model order:
-    - logo/text/graphic-like images (many very dark+very bright pixels) do better with u2net first
-    - general photos do better with birefnet-general first
+    Score a cutout mask for professional quality:
+    - plausible foreground coverage
+    - soft fringe present (hair/edges) without being mostly mushy
+    - not a hard binary stamp
     """
-    arr = np.array(Image.open(io.BytesIO(raw)).convert("RGB"))
-    gray = arr.mean(axis=2)
-    dark_ratio = float(np.mean(gray < 40))
-    bright_ratio = float(np.mean(gray > 220))
-    graphic_like = dark_ratio > 0.03 and bright_ratio > 0.18
+    a = alpha.astype(np.float32)
+    fg = float(np.mean(a > 10))
+    solid = float(np.mean(a > 245))
+    soft = float(np.mean((a > 20) & (a < 235)))
+    hard_binary = soft < 0.004 and solid > 0.02
 
-    # For graphic-heavy images we prefer detail retention model first.
-    preferred = ["birefnet-general", "u2netp"] if graphic_like else ["u2netp", "birefnet-general"]
-    return [m for m in preferred if m in rembg_sessions]
+    if fg < 0.015 or fg > 0.985:
+        return fg * 0.2
+
+    score = fg
+    # Reward a healthy soft fringe (remove.bg-like hair/edges)
+    score += min(soft, 0.12) * 1.8
+    # Prefer subjects that aren't tiny or almost full-frame leftovers
+    if 0.08 <= fg <= 0.85:
+        score += 0.08
+    if hard_binary:
+        score -= 0.12
+    return score
 
 
-def _remove_background_pro(raw: bytes) -> tuple[bytes, str]:
+def _remove_background_pro(raw: bytes) -> tuple[bytes, str, str, bytes]:
     """
-    Professional background removal:
-    - Keeps all foreground pixels (people, products, text, logos)
-    - Removes only background
-    - Returns PNG bytes with alpha channel
+    SAM2 → BiRefNet → PyMatting, with a dedicated logo/signature engine for marks.
+    Returns: (object_png, model_name, image_type, background_sheet_png)
     """
-    if not rembg_sessions:
-        raise RuntimeError("Background removal model is not loaded.")
-
-    input_bytes, original_size = _prepare_input_bytes(raw)
-
-    # Strategy A: white border connected-background removal (best for logos/text on white)
-    white_bg_result = _remove_white_background_connected(input_bytes)
-    if white_bg_result is not None:
-        output_image = Image.open(io.BytesIO(white_bg_result)).convert("RGBA")
-        if original_size and output_image.size != original_size:
-            output_image = output_image.resize(original_size, Image.Resampling.LANCZOS)
-        out_buf = io.BytesIO()
-        output_image.save(out_buf, format="PNG", optimize=True)
-        return out_buf.getvalue(), "white-bg-preserve"
-
-    # Strategy B: rembg model fallback chain with quality scoring
-    model_order = _select_model_order(input_bytes)
-    started = time.perf_counter()
-    best_bytes: bytes | None = None
-    best_model = active_model_name
-    best_score = -1.0
-    for idx, model_name in enumerate(model_order):
-        session = rembg_sessions[model_name]
-        try:
-            candidate, score = _run_rembg_candidate(input_bytes, model_name, session)
-            # Prefer candidates with plausible foreground coverage
-            quality = score if 0.02 <= score <= 0.98 else score * 0.5
-            if quality > best_score:
-                best_score = quality
-                best_bytes = candidate
-                best_model = model_name
-            # Keep latency bounded for frontend UX.
-            if (time.perf_counter() - started) > 10.0 and best_bytes is not None:
-                break
-            # Fast path: if first preferred model gives a healthy mask, stop.
-            if idx == 0 and 0.03 <= score <= 0.92:
-                break
-            # Any strong candidate can end search early.
-            if quality >= 0.75:
-                break
-        except Exception as exc:
-            logger.warning("Model %s failed for request: %s", model_name, exc)
-
-    if best_bytes is None:
-        raise RuntimeError("All background removal candidates failed.")
-
-    output_bytes = best_bytes
-
-    output_image = Image.open(io.BytesIO(output_bytes)).convert("RGBA")
-
-    # Restore original dimensions if we downscaled
-    if original_size and output_image.size != original_size:
-        output_image = output_image.resize(original_size, Image.Resampling.LANCZOS)
-
-    out_buf = io.BytesIO()
-    output_image.save(out_buf, format="PNG", optimize=True)
-    return out_buf.getvalue(), best_model
+    return get_pipeline().remove(raw)
 
 
 def _save_original(raw: bytes, content_type: str, path: Path) -> None:
@@ -383,7 +845,7 @@ def _blur_background_pro(raw: bytes, intensity: int) -> tuple[bytes, str]:
     original_bgr = _decode_upload_bgr(raw)
     h, w = original_bgr.shape[:2]
 
-    rgba_bytes, used_model = _remove_background_pro(raw)
+    rgba_bytes, used_model, _image_type, _bg_sheet = _remove_background_pro(raw)
     rgba = Image.open(io.BytesIO(rgba_bytes)).convert("RGBA")
     rgba_np = np.asarray(rgba, dtype=np.uint8)
     if rgba_np.shape[0] != h or rgba_np.shape[1] != w:
@@ -1160,7 +1622,7 @@ def _compose_generated_background(raw: bytes, prompt: str, solid_color: str) -> 
     2) generate prompt/solid background
     3) blend subject with soft shadow for realism
     """
-    cutout_png, used_model = _remove_background_pro(raw)
+    cutout_png, used_model, _image_type, _bg_sheet = _remove_background_pro(raw)
     subject_rgba = Image.open(io.BytesIO(cutout_png)).convert("RGBA")
     w, h = subject_rgba.size
 
@@ -1420,7 +1882,7 @@ def _warmup_advanced_upscale() -> None:
 async def lifespan(app: FastAPI):
     logger.info("Backend Python: %s", sys.executable)
     cleanup_expired_files()
-    _load_rembg_sessions()
+    _init_segmentation_pipeline()
     try:
         from cms_database import init_db
 
@@ -1493,12 +1955,18 @@ def root() -> dict[str, Any]:
 
 @app.get("/health")
 def health() -> dict[str, Any]:
+    seg = get_pipeline().status()
     return {
         "status": "ok",
         "build": API_BUILD,
         "python": sys.executable,
-        "models_loaded": list(rembg_sessions.keys()),
+        "models_loaded": [
+            seg.get("sam2_backend") or "sam2",
+            seg.get("birefnet_backend") or "birefnet",
+            "pymatting",
+        ],
         "default_model": active_model_name,
+        "segmentation": seg,
         "alpha_matting": ALPHA_MATTING,
         "advanced_upscale_available": ADVANCED_UPSCALE_AVAILABLE,
         "advanced_upscale_ready": advanced_upscale_ready,
@@ -1541,8 +2009,10 @@ async def remove_background(file: UploadFile = File(...)) -> dict[str, Any]:
     original_ext = ext_map.get(content_type, "jpg")
     original_name = f"{job_id}_original.{original_ext}"
     processed_name = f"{job_id}_processed.png"
+    background_name = f"{job_id}_background.png"
     original_path = UPLOAD_DIR / original_name
     processed_path = UPLOAD_DIR / processed_name
+    background_path = UPLOAD_DIR / background_name
 
     try:
         _save_original(raw, content_type, original_path)
@@ -1552,12 +2022,15 @@ async def remove_background(file: UploadFile = File(...)) -> dict[str, Any]:
     started = time.perf_counter()
     try:
         loop = asyncio.get_running_loop()
-        # No asyncio timeout — large images must be allowed to finish (same as upscale).
-        output_bytes, used_model = await loop.run_in_executor(executor, _remove_background_pro, raw)
+        output_bytes, used_model, image_type, background_bytes = await loop.run_in_executor(
+            executor, _remove_background_pro, raw
+        )
         processed_path.write_bytes(output_bytes)
+        background_path.write_bytes(background_bytes)
     except Exception as exc:
         original_path.unlink(missing_ok=True)
         processed_path.unlink(missing_ok=True)
+        background_path.unlink(missing_ok=True)
         logger.exception("Background removal failed")
         raise HTTPException(
             status_code=500,
@@ -1565,15 +2038,23 @@ async def remove_background(file: UploadFile = File(...)) -> dict[str, Any]:
         ) from exc
 
     elapsed_ms = round((time.perf_counter() - started) * 1000)
-    logger.info("Processed %s in %dms (job %s)", file.filename or "image", elapsed_ms, job_id)
+    logger.info(
+        "Processed %s in %dms (job %s, type=%s)",
+        file.filename or "image",
+        elapsed_ms,
+        job_id,
+        image_type,
+    )
 
     return {
         "job_id": job_id,
         "original_image_url": f"/uploads/{original_name}",
         "processed_image_url": f"/uploads/{processed_name}",
+        "background_image_url": f"/uploads/{background_name}",
         "original_filename": file.filename or original_name,
         "processing_time_ms": elapsed_ms,
         "model": used_model,
+        "image_type": image_type,
         "format": "png",
         "transparent": True,
     }

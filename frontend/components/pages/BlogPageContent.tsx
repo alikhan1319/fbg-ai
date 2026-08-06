@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowRight, ChevronRight, BookOpen } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { fetchBlogPosts } from "@/services/cmsApi";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BackToTop } from "@/components/ui/BackToTop";
+import { StudioPageHero } from "@/components/ui/StudioPageHero";
 import { SectionHeading, SectionShell } from "@/components/ui/SectionHeading";
 import { FadeInView, StaggerGrid, StaggerGridItem } from "@/components/ui/motion";
 import { BlogPostCard } from "@/components/ui/BlogPostCard";
@@ -27,7 +27,7 @@ export function BlogPageContent({
   totalPages?: number;
   totalPosts?: number;
 }) {
-  const [livePosts, setLivePosts] = useState<CmsBlogPost[]>(posts ?? []);
+  const [livePosts, setLivePosts] = useState<CmsBlogPost[]>([...(posts ?? [])]);
   const [livePage, setLivePage] = useState(page);
   const [liveTotalPages, setLiveTotalPages] = useState(totalPages);
   const [liveTotalPosts, setLiveTotalPosts] = useState(totalPosts);
@@ -47,7 +47,7 @@ export function BlogPageContent({
   }, [page]);
 
   useEffect(() => {
-    setLivePosts(posts ?? []);
+    setLivePosts([...(posts ?? [])]);
     setLivePage(page);
     setLiveTotalPages(totalPages);
     setLiveTotalPosts(totalPosts);
@@ -70,48 +70,32 @@ export function BlogPageContent({
     <>
       <Navbar />
       <main className="overflow-x-clip">
-        <section className="hero-mesh hero-grid-dots relative overflow-hidden pt-28 pb-14 sm:pt-32 sm:pb-16">
-          <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-brand-purple/15 blur-3xl" aria-hidden />
-          <div className="relative mx-auto w-full max-w-[1280px] px-8">
-            <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-2 text-sm text-brand-muted">
-              <Link href="/" className="font-medium transition-colors hover:text-brand-secondary">
-                Home
+        <StudioPageHero
+          crumbs={[{ label: "Home", href: "/" }, { label: "Blog" }]}
+          label="Resources & guides"
+          title={
+            <>
+              {PRIMARY_KEYWORD_TITLE} <span className="text-brand-secondary">Blog</span>
+            </>
+          }
+          description={
+            <>
+              Guides, tips, and workflows for our{" "}
+              <Link href="/remove-bg" className="font-semibold text-brand-secondary hover:underline">
+                {PRIMARY_KEYWORD}
               </Link>
-              <ChevronRight className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
-              <span className="font-semibold text-brand-text">Blog</span>
-            </nav>
+              , upscaler, enhancer, and the rest of our free tools on the{" "}
+              <Link href="/" className="font-semibold text-brand-secondary hover:underline">
+                homepage
+              </Link>
+              .
+            </>
+          }
+        />
 
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-3xl"
-            >
-              <span className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-brand-secondary shadow-sm">
-                <BookOpen className="h-3.5 w-3.5" aria-hidden />
-                Resources & guides
-              </span>
-              <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-brand-text sm:text-5xl">
-                {PRIMARY_KEYWORD_TITLE}{" "}
-                <span className="gradient-text-animated">Blog</span>
-              </h1>
-              <p className="mt-6 text-lg leading-relaxed text-brand-muted">
-                Guides, tips, and workflows for our{" "}
-                <Link href="/remove-bg" className="font-semibold text-brand-secondary hover:underline">
-                  {PRIMARY_KEYWORD}
-                </Link>
-                , upscaler, enhancer, and the rest of our free tools on the{" "}
-                <Link href="/" className="font-semibold text-brand-secondary hover:underline">
-                  homepage
-                </Link>
-                .
-              </p>
-            </motion.div>
-          </div>
-        </section>
-
-        <SectionShell ariaLabel="Blog articles">
+        <SectionShell ariaLabel="Blog articles" className="bg-brand-bg">
           <SectionHeading
+            align="left"
             label="Latest articles"
             title="Learn &"
             highlight="grow"
@@ -128,29 +112,28 @@ export function BlogPageContent({
 
           <BlogPagination page={livePage} totalPages={liveTotalPages} />
 
-          <FadeInView className="relative mt-16 overflow-hidden rounded-3xl border border-white/10 bg-brand-navy px-8 py-12 text-center shadow-2xl sm:px-12">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-secondary/20 via-transparent to-brand-purple/20" aria-hidden />
-            <div className="relative">
-              <h2 className="text-2xl font-extrabold text-white sm:text-3xl">Ready to try what you learned?</h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300 sm:text-base">
-                Put these guides into action with {BRAND.name} — start on our remove background tool or explore all six
-                free AI editors.
-              </p>
-              <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Link
-                  href="/remove-bg"
-                  className="btn-ripple btn-gradient btn-shine inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg sm:w-auto"
-                >
-                  Try background remover
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/"
-                  className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white/20 sm:w-auto"
-                >
-                  Back to homepage
-                </Link>
-              </div>
+          <FadeInView className="mt-16 border border-white/10 bg-brand-navy px-8 py-12 text-center sm:px-12">
+            <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
+              Ready to try what you learned?
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-white/55 sm:text-base">
+              Put these guides into action with {BRAND.name} — start on our remove background tool or explore all six
+              free AI editors.
+            </p>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/remove-bg"
+                className="btn-gradient inline-flex min-h-[48px] w-full items-center justify-center gap-2 px-6 text-sm font-semibold text-brand-navy sm:w-auto"
+              >
+                Try background remover
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex min-h-[48px] w-full items-center justify-center border border-white/25 px-6 text-sm font-semibold text-white hover:border-brand-secondary hover:text-brand-secondary sm:w-auto"
+              >
+                Back to homepage
+              </Link>
             </div>
           </FadeInView>
         </SectionShell>

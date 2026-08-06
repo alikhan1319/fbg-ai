@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { BRAND } from "@/lib/constants";
+import { ASSET_V, BRAND } from "@/lib/constants";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -18,7 +18,7 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any",
       },
       {
-        src: "/img/web-icon-192.png",
+        src: `/img/web-icon-192.png?v=${ASSET_V}`,
         sizes: "192x192",
         type: "image/png",
         purpose: "any",

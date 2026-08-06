@@ -6,8 +6,6 @@ export type ToolSoftwareSchemaInput = {
   description: string;
   urlPath: string;
   category?: string;
-  ratingValue?: number;
-  ratingCount?: number;
 };
 
 export function ToolSoftwareApplicationSchema({
@@ -15,8 +13,6 @@ export function ToolSoftwareApplicationSchema({
   description,
   urlPath,
   category = "ImageEditingApplication",
-  ratingValue = 4.9,
-  ratingCount = 15234,
 }: ToolSoftwareSchemaInput) {
   const schema = {
     "@context": "https://schema.org",
@@ -27,12 +23,7 @@ export function ToolSoftwareApplicationSchema({
     url: absoluteUrl(urlPath),
     description,
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: String(ratingValue),
-      ratingCount: String(ratingCount),
-    },
-    publisher: { "@type": "Organization", name: BRAND.shortName },
+    publisher: { "@type": "Organization", name: BRAND.shortName, url: absoluteUrl("/") },
   };
 
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />;
@@ -100,4 +91,3 @@ export function ToolFAQSchema({
 
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />;
 }
-

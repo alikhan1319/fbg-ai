@@ -1,38 +1,35 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/constants";
 import { type ToolPageConfig } from "@/components/tool/ToolLayout";
 import { ToolPageWrapper } from "@/components/tool/ToolPageWrapper";
-import { ToolSoftwareApplicationSchema } from "@/components/tool/ToolSchemas";
+import {
+  BreadcrumbSchema,
+  ToolSoftwareApplicationSchema,
+  ToolWebPageSchema,
+} from "@/components/tool/ToolSchemas";
+import { GEN_BG_SEO, toolOgImage } from "@/lib/seo";
 
-const urlPath = "/generate-background";
-const og = `${SITE_URL.replace(/\/$/, "")}${urlPath}/opengraph-image`;
+const urlPath = GEN_BG_SEO.path;
+const og = toolOgImage(urlPath);
 
 export const metadata: Metadata = {
-  title: "AI Background Generator | Generate Backgrounds for Images",
-  description:
-    "Generate stunning AI backgrounds for your images with FBR AI. Use text prompts, style presets, and solid colors to match your subject lighting. Free to start, no signup.",
-  keywords: [
-    "AI background generator",
-    "generate background for images",
-    "background creator",
-    "text to background",
-    "background presets",
-    "replace background",
-  ],
-  alternates: { canonical: urlPath },
+  title: GEN_BG_SEO.title,
+  description: GEN_BG_SEO.description,
+  keywords: [...GEN_BG_SEO.keywords],
+  alternates: { canonical: GEN_BG_SEO.canonical },
   openGraph: {
-    title: "AI Background Generator - FBR AI",
-    description: "Create new backgrounds with prompts, presets, and lighting-aware results.",
+    title: GEN_BG_SEO.title,
+    description: GEN_BG_SEO.description,
     url: urlPath,
     type: "website",
-    images: [{ url: og, width: 1200, height: 630, alt: "FBR AI Background Generator" }],
+    images: [{ url: og, width: 1200, height: 630, alt: "FBG AI Background Generator" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Background Generator - FBR AI",
-    description: "Generate backgrounds for images with AI prompts.",
+    title: GEN_BG_SEO.title,
+    description: GEN_BG_SEO.description,
     images: [og],
   },
+  robots: { index: true, follow: true },
 };
 
 const config: ToolPageConfig = {
@@ -139,9 +136,16 @@ const config: ToolPageConfig = {
 export default function GenerateBackgroundPage() {
   return (
     <>
+      <ToolWebPageSchema name={GEN_BG_SEO.title} description={GEN_BG_SEO.description} urlPath={urlPath} />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Background Generator", path: urlPath },
+        ]}
+      />
       <ToolSoftwareApplicationSchema
-        name="FBR AI Background Generator"
-        description={metadata.description as string}
+        name="FBG AI Background Generator"
+        description={GEN_BG_SEO.description}
         urlPath={urlPath}
       />
       <ToolPageWrapper config={config} />

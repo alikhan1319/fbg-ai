@@ -115,7 +115,7 @@ export function SiteLoader() {
             </motion.div>
 
             <motion.p
-              className="site-loader__brand gradient-text-animated"
+              className="site-loader__brand"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.5 }}

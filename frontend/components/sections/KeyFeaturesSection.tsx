@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { KEY_FEATURES } from "@/lib/constants";
 import { SectionHeading, SectionShell } from "@/components/ui/SectionHeading";
-import { StaggerGrid, StaggerGridItem, PremiumCard } from "@/components/ui/motion";
+import { StaggerGrid, StaggerGridItem } from "@/components/ui/motion";
 
 const icons = {
   brain: Brain,
@@ -31,28 +31,45 @@ const icons = {
 
 export function KeyFeaturesSection() {
   return (
-    <SectionShell id="features" ariaLabel="Key features">
-      <SectionHeading
-        label="Why creators choose us"
-        title="Key"
-        highlight="features"
-        description="Built for speed, quality, and privacy — whether you edit one photo or hundreds."
-      />
+    <SectionShell id="features" className="bg-brand-bg" ariaLabel="Key features">
+      <div className="grid gap-12 lg:grid-cols-[0.9fr_1.4fr] lg:gap-16">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <SectionHeading
+            align="left"
+            label="Built for creators"
+            title="Features that"
+            highlight="stay out of the way."
+            description="Speed, quality, and privacy — whether you edit one photo or hundreds."
+          />
+          <p className="mt-8 hidden text-xs font-semibold uppercase tracking-[0.18em] text-brand-muted lg:block">
+            {KEY_FEATURES.length} capabilities · no paywall on core edits
+          </p>
+        </div>
 
-      <StaggerGrid className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {KEY_FEATURES.map((f) => {
-          const Icon = icons[f.icon as keyof typeof icons];
-          return (
-            <StaggerGridItem key={f.title}>
-              <PremiumCard className="h-full p-5">
-                <Icon className="h-6 w-6 text-brand-primary transition-colors duration-300 group-hover:text-brand-secondary" />
-                <h3 className="mt-3 text-sm font-bold text-brand-text">{f.title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-brand-muted">{f.description}</p>
-              </PremiumCard>
-            </StaggerGridItem>
-          );
-        })}
-      </StaggerGrid>
+        <StaggerGrid className="grid gap-3 sm:grid-cols-2">
+          {KEY_FEATURES.map((f, i) => {
+            const Icon = icons[f.icon as keyof typeof icons];
+            return (
+              <StaggerGridItem key={f.title}>
+                <article className="group relative h-full overflow-hidden border border-brand-border bg-white p-6 transition-colors hover:border-brand-navy hover:bg-brand-navy">
+                  <div className="flex items-start justify-between gap-3">
+                    <Icon className="h-5 w-5 text-brand-secondary" />
+                    <span className="font-display text-xs font-bold tabular-nums text-brand-border transition-colors group-hover:text-white/20">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 font-display text-base font-bold text-brand-text transition-colors group-hover:text-white">
+                    {f.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-brand-muted transition-colors group-hover:text-white/50">
+                    {f.description}
+                  </p>
+                </article>
+              </StaggerGridItem>
+            );
+          })}
+        </StaggerGrid>
+      </div>
     </SectionShell>
   );
 }

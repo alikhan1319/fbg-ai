@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { SectionShell } from "@/components/ui/SectionHeading";
 import { CompareSlider } from "@/components/ui/CompareSlider";
+import { SOCIAL_LINKS } from "@/lib/constants";
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -33,14 +34,14 @@ function ResultImageCard({
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-4 shadow-md sm:p-5">
+    <article className="flex h-full flex-col border border-brand-border bg-white p-4 sm:p-5">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-gray-700">{label}</h3>
-        <span className="text-xs text-gray-400">{sizeLabel}</span>
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-muted">{label}</h3>
+        <span className="text-xs tabular-nums text-brand-muted">{sizeLabel}</span>
       </div>
       <div
         className={cn(
-          "relative mt-4 flex-1 overflow-hidden rounded-xl border border-gray-100 bg-gray-50",
+          "relative mt-4 flex-1 overflow-hidden border border-brand-border bg-brand-bg",
           checkerboard && "checkerboard"
         )}
       >
@@ -73,13 +74,14 @@ export function ResultSection({
   onReset,
   onDownload,
   onCopyLink,
-  onTweet,
   resultAriaLabel = "Background removal results",
   originalAlt = "Original uploaded image before background removal",
   processedAlt = "Processed image with transparent background",
   processedLabel = "Processed Image",
   checkerboardProcessed = true,
   useCompareSlider = false,
+  imageType,
+  backgroundUrl,
 }: {
   originalUrl: string;
   processedUrl: string;
@@ -92,13 +94,16 @@ export function ResultSection({
   onReset: () => void;
   onDownload: () => void;
   onCopyLink: () => void;
-  onTweet: () => void;
+  /** @deprecated Tweet share removed — Instagram & Facebook only */
+  onTweet?: () => void;
   resultAriaLabel?: string;
   originalAlt?: string;
   processedAlt?: string;
   processedLabel?: string;
   checkerboardProcessed?: boolean;
   useCompareSlider?: boolean;
+  imageType?: string | null;
+  backgroundUrl?: string | null;
 }) {
   const confettiFired = useRef(false);
 
@@ -109,72 +114,99 @@ export function ResultSection({
       particleCount: 40,
       spread: 50,
       origin: { y: 0.6 },
-      colors: ["#1D4ED8", "#8B5CF6"],
+      colors: ["#00BFA6", "#0E1114", "#F6F7F8"],
     });
   }, []);
+
+  const sharePageUrl = () =>
+    typeof window !== "undefined" ? window.location.href : "";
+
+  const shareFacebook = () => {
+    const page = encodeURIComponent(sharePageUrl());
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${page}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  const shareInstagram = () => {
+    const instagram = SOCIAL_LINKS.find((s) => s.label === "Instagram");
+    window.open(instagram?.href || "https://www.instagram.com/", "_blank", "noopener,noreferrer");
+  };
 
   const processedSizeLabel = processedSize != null ? formatBytes(processedSize) : "PNG";
 
   return (
-    <SectionShell id="results" className="bg-gray-50/50" ariaLabel={resultAriaLabel}>
+    <SectionShell id="results" className="bg-brand-bg" ariaLabel={resultAriaLabel}>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="mx-auto max-w-3xl"
+        className="mx-auto max-w-4xl"
       >
-        <div className="mb-10 text-center">
-          <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" aria-hidden />
-          <h2 className="mt-4 text-xl font-medium text-gray-800 sm:text-2xl">Compare your before & after</h2>
-          <p className="mt-2 text-sm text-gray-500">{successLabel}</p>
+        <div className="mb-10 max-w-xl">
+          <p className="studio-label inline-flex items-center gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-brand-secondary" aria-hidden />
+            Ready to export
+          </p>
+          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-brand-text sm:text-4xl">
+            Before & <span className="text-brand-secondary">after.</span>
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-brand-muted sm:text-base">{successLabel}</p>
+          {imageType ? (
+            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary">
+              Detected · {imageType}
+            </p>
+          ) : null}
         </div>
 
         {useCompareSlider ? (
-          <div className="mx-auto max-w-2xl">
-            <div className="luxury-card image-zoom overflow-hidden rounded-2xl border-0 p-0">
+          <div>
+            <div className="overflow-hidden border border-brand-border bg-white">
               <CompareSlider
                 before={originalUrl}
                 after={processedUrl}
                 altBefore={originalAlt}
                 altAfter={processedAlt}
-                className="aspect-[4/3] rounded-2xl shadow-none"
+                className="aspect-[4/3] rounded-none shadow-none"
                 transparentAfter={checkerboardProcessed}
                 useNativeImage
               />
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500">
-              <span className="rounded-full border border-gray-200 bg-white px-3 py-1.5">
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-brand-muted">
+              <span className="border border-brand-border bg-white px-3 py-1.5">
                 Original: {formatBytes(originalSize)}
               </span>
-              <span className="rounded-full border border-gray-200 bg-white px-3 py-1.5">
+              <span className="border border-brand-border bg-white px-3 py-1.5">
                 {processedLabel}: {processedSizeLabel}
               </span>
             </div>
 
             <div className="mt-5">
-              <Button className={cn("min-h-[44px] w-full", heroGradientClass)} onClick={onDownload}>
+              <Button className={cn("btn-gradient min-h-[48px] w-full sm:w-auto", heroGradientClass)} onClick={onDownload}>
                 <Download className="h-4 w-4" />
                 {downloadLabel}
               </Button>
             </div>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <ResultImageCard
-              label="Original Image"
-              src={originalUrl}
-              alt={originalAlt}
-              sizeLabel={formatBytes(originalSize)}
+              label="Background sheet"
+              src={backgroundUrl || originalUrl}
+              alt="Detected background plate"
+              sizeLabel={backgroundUrl ? "BG" : formatBytes(originalSize)}
             />
             <ResultImageCard
-              label={processedLabel}
+              label="Object sheet"
               src={processedUrl}
               alt={processedAlt}
               sizeLabel={processedSizeLabel}
               checkerboard={checkerboardProcessed}
             >
-              <Button className={cn("min-h-[44px] w-full", heroGradientClass)} onClick={onDownload}>
+              <Button className={cn("btn-gradient min-h-[44px] w-full", heroGradientClass)} onClick={onDownload}>
                 <Download className="h-4 w-4" />
                 {downloadLabel}
               </Button>
@@ -182,11 +214,11 @@ export function ResultSection({
           </div>
         )}
 
-        <div className="mt-8 flex flex-col items-center gap-4">
-          <p className="text-center text-xs text-gray-400">
+        <div className="mt-10 flex flex-col gap-4 border-t border-brand-border pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-brand-muted">
             {fileName} · auto-deleted in 1 hour
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button variant="outline" className="min-h-[44px]" onClick={onReset}>
               <RefreshCw className="h-4 w-4" />
               Try Another Image
@@ -195,9 +227,13 @@ export function ResultSection({
               <Copy className="h-4 w-4" />
               Copy Result Link
             </Button>
-            <Button variant="outline" className="min-h-[44px]" onClick={onTweet}>
+            <Button variant="outline" className="min-h-[44px]" onClick={shareInstagram}>
               <ExternalLink className="h-4 w-4" />
-              Tweet Result
+              Instagram
+            </Button>
+            <Button variant="outline" className="min-h-[44px]" onClick={shareFacebook}>
+              <ExternalLink className="h-4 w-4" />
+              Facebook
             </Button>
           </div>
         </div>

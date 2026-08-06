@@ -84,7 +84,7 @@ export function PrivacyPageContent() {
       <Navbar />
       <main className="overflow-x-clip">
         {/* Hero */}
-        <section className="hero-mesh hero-grid-dots relative overflow-hidden pt-28 pb-14 sm:pt-32 sm:pb-16">
+        <section className="bg-brand-navy relative overflow-hidden pt-28 pb-14 sm:pt-32 sm:pb-16">
           <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-brand-secondary/15 blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl" aria-hidden />
 
@@ -103,13 +103,13 @@ export function PrivacyPageContent() {
               transition={{ duration: 0.5 }}
               className="max-w-3xl"
             >
-              <span className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-brand-secondary shadow-sm">
+              <span className="inline-flex items-center gap-2 studio-label">
                 <Shield className="h-3.5 w-3.5" aria-hidden />
                 Privacy-first platform
               </span>
               <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-brand-text sm:text-5xl">
                 Privacy Policy for{" "}
-                <span className="gradient-text-animated">{PRIMARY_KEYWORD_TITLE}</span>
+                <span className="text-brand-secondary">{PRIMARY_KEYWORD_TITLE}</span>
               </h1>
               <p className="mt-6 text-lg leading-relaxed text-brand-muted">
                 This policy explains how {BRAND.name} handles your data when you use our{" "}
@@ -134,7 +134,7 @@ export function PrivacyPageContent() {
           <StaggerGrid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {HIGHLIGHTS.map(({ icon: Icon, title, text }) => (
               <StaggerGridItem key={title}>
-                <div className="luxury-card h-full rounded-2xl border border-white/70 bg-white p-5 shadow-md">
+                <div className="border border-brand-border h-full  border border-white/70 bg-white p-5 shadow-md">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
                     <Icon className="h-5 w-5" aria-hidden />
                   </div>
@@ -152,7 +152,7 @@ export function PrivacyPageContent() {
             <aside className="hidden lg:block">
               <nav
                 aria-label="Table of contents"
-                className="sticky top-28 rounded-2xl border border-brand-border bg-white p-5 shadow-sm"
+                className="sticky top-28  border border-brand-border bg-white p-5 shadow-sm"
               >
                 <p className="text-xs font-bold uppercase tracking-widest text-brand-muted">On this page</p>
                 <ul className="mt-4 space-y-2">
@@ -170,7 +170,7 @@ export function PrivacyPageContent() {
               </nav>
             </aside>
 
-            <FadeInView className="luxury-card rounded-3xl border border-brand-border bg-white px-6 py-2 shadow-lg sm:px-10 sm:py-4">
+            <FadeInView className="border border-brand-border  border border-brand-border bg-white px-6 py-2   sm:px-10 sm:py-4">
               <PolicySection id="introduction" title="1. Introduction">
                 <p>
                   {BRAND.name} (&quot;{BRAND.shortName}&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) operates
@@ -425,8 +425,8 @@ export function PrivacyPageContent() {
           </div>
 
           {/* CTA */}
-          <FadeInView className="relative mt-14 overflow-hidden rounded-3xl border border-white/10 bg-brand-navy px-8 py-12 text-center shadow-2xl sm:px-12">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-secondary/20 via-transparent to-brand-purple/20" aria-hidden />
+          <FadeInView className="relative mt-14 overflow-hidden  border border-white/10 bg-brand-navy px-8 py-12 text-center   sm:px-12">
+            <div className="pointer-events-none absolute inset-0 " aria-hidden />
             <div className="relative">
               <h2 className="text-2xl font-extrabold text-white sm:text-3xl">
                 Ready to edit with confidence?
@@ -437,7 +437,7 @@ export function PrivacyPageContent() {
               <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   href="/remove-bg"
-                  className="btn-ripple btn-gradient btn-shine inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg sm:w-auto"
+                  className="btn-ripple btn-gradient btn-shine inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-brand-navy sm:w-auto"
                 >
                   Try background remover
                   <ArrowRight className="h-4 w-4" />

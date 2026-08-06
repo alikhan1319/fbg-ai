@@ -11,6 +11,8 @@ export function OrganizationSchema() {
     url: absoluteUrl("/"),
     logo: absoluteUrl(BRAND.logo),
     description: HOME_SEO.description,
+    /** Add verified social profile URLs here when available */
+    sameAs: [] as string[],
   };
 
   return (
@@ -83,11 +85,6 @@ export function WebAppSchema() {
     },
     featureList: AI_TOOLS.map((t) => t.fullName),
     description: HOME_SEO.description,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      ratingCount: "15234",
-    },
   };
 
   return (

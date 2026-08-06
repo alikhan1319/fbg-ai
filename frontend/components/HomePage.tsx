@@ -13,6 +13,7 @@ import { WhyChooseUsSection } from "@/components/sections/WhyChooseUsSection";
 import { StatsSection } from "@/components/sections/StatsSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { FAQSection } from "@/components/sections/FAQSection";
+import { SeoContentSection } from "@/components/sections/SeoContentSection";
 import { BlogSection } from "@/components/sections/BlogSection";
 import { NewsletterSection } from "@/components/sections/NewsletterSection";
 import type { CmsBlogPost } from "@/lib/cms-server";
@@ -40,6 +41,7 @@ export function HomePage({
         <StatsSection />
         <TestimonialsSection items={testimonials} />
         <FAQSection items={faqItems} />
+        <SeoContentSection />
         <BlogSection posts={latestPosts} />
         <NewsletterSection />
       </main>

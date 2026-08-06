@@ -76,9 +76,9 @@ export function CompareSlider({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={before} alt={altBefore} className={cn("h-full w-full", objectClass)} loading="lazy" />
         ) : (
-          <Image src={before} alt={altBefore} fill className={objectClass} sizes="400px" loading="lazy" />
+          <Image src={before} alt={altBefore} fill className={objectClass} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" loading="lazy" />
         )}
-        <span className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white">
+        <span className="absolute bottom-3 left-3 bg-brand-navy/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
           Before
         </span>
       </div>
@@ -91,15 +91,15 @@ export function CompareSlider({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={after} alt={altAfter} className={cn("h-full w-full", objectClass)} loading="lazy" />
         ) : (
-          <Image src={after} alt={altAfter} fill className={objectClass} sizes="400px" loading="lazy" />
+          <Image src={after} alt={altAfter} fill className={objectClass} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" loading="lazy" />
         )}
-        <span className="absolute bottom-3 right-3 rounded-md bg-brand-primary px-2 py-1 text-xs font-semibold text-white">
+        <span className="absolute bottom-3 right-3 bg-brand-secondary px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-navy">
           After
         </span>
       </div>
 
       <div
-        className="absolute inset-y-0 z-10 w-0.5 bg-white shadow-md"
+        className="absolute inset-y-0 z-10 w-0.5 bg-white"
         style={{ left: `${pos}%`, transform: "translateX(-50%)" }}
       >
         <button
@@ -109,10 +109,10 @@ export function CompareSlider({
             (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
             onDown(e);
           }}
-          className="absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-white bg-gradient-to-br from-brand-primary to-brand-secondary shadow-xl shadow-brand-primary/40 transition-transform duration-300 hover:scale-110 active:scale-95"
+          className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-brand-secondary text-brand-navy transition-transform duration-200 hover:scale-105 active:scale-95"
           aria-label="Drag to compare before and after"
         >
-          <ArrowLeftRight className="h-4 w-4 text-white" />
+          <ArrowLeftRight className="h-4 w-4" />
         </button>
       </div>
     </div>

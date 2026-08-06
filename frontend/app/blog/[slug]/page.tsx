@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { BRAND } from "@/lib/constants";
 import { getCmsBlogArticle, getCmsRelatedBlogPosts } from "@/lib/cms-server";
 import { resolveBlogImageAbsolute } from "@/lib/media-url";
-import { PRIMARY_KEYWORD_TITLE, absoluteUrl } from "@/lib/seo";
+import { PRIMARY_KEYWORD_TITLE, absoluteUrl, EDITORIAL_AUTHOR } from "@/lib/seo";
 import { BlogArticleContent } from "@/components/pages/BlogArticleContent";
 import { BreadcrumbSchema } from "@/components/tool/ToolSchemas";
 
@@ -51,8 +51,12 @@ function ArticleSchema({ article, slug }: { article: NonNullable<Awaited<ReturnT
     description: article.excerpt,
     datePublished: article.date,
     author: {
-      "@type": "Organization",
-      name: PRIMARY_KEYWORD_TITLE,
+      "@type": "Person",
+      name: EDITORIAL_AUTHOR.name,
+      worksFor: {
+        "@type": "Organization",
+        name: EDITORIAL_AUTHOR.company,
+      },
     },
     publisher: {
       "@type": "Organization",

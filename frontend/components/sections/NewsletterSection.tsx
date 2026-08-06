@@ -1,10 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { motion } from "framer-motion";
 import { Mail } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
-import { SectionShell } from "@/components/ui/SectionHeading";
 import { FadeInView } from "@/components/ui/motion";
 import { Button } from "@/components/ui/Button";
 
@@ -25,24 +23,41 @@ export function NewsletterSection() {
   };
 
   return (
-    <SectionShell className="bg-brand-card/50" ariaLabel="Newsletter signup">
-      <div className="section-divider absolute inset-x-0 top-0" />
-      <FadeInView className="mx-auto max-w-2xl">
-        <div className="animated-border shadow-xl">
-          <div className="animated-border-inner p-8 text-center sm:p-12">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-secondary to-brand-purple text-white shadow-lg"
-            >
-              <Mail className="h-7 w-7" />
-            </motion.div>
-            <h2 className="mt-6 text-2xl font-extrabold tracking-tight text-brand-text sm:text-3xl">
-              Get AI editing tips in your <span className="gradient-text-animated">inbox</span>
+    <section aria-label="Newsletter signup" className="bg-brand-bg py-16 sm:py-20">
+      <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
+        <FadeInView className="grid overflow-hidden border border-brand-border lg:grid-cols-2">
+          <div className="bg-brand-navy p-8 text-white sm:p-12 lg:p-14">
+            <p className="studio-label">Stay sharp</p>
+            <h2 className="mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">
+              Editing tips in your{" "}
+              <span className="text-brand-secondary">inbox</span>
             </h2>
-            <p className="mt-3 text-brand-muted/90">
+            <p className="mt-5 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">
               Monthly guides, tool updates, and workflow tips. No spam — unsubscribe anytime.
             </p>
-            <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <ul className="mt-8 space-y-3 text-sm text-white/45">
+              <li className="flex items-center gap-2">
+                <span className="h-1 w-1 bg-brand-secondary" aria-hidden />
+                New tool releases first
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1 w-1 bg-brand-secondary" aria-hidden />
+                Practical edit workflows
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1 w-1 bg-brand-secondary" aria-hidden />
+                One email a month max
+              </li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col justify-center bg-white p-8 sm:p-12 lg:p-14">
+            <div className="mb-6 flex h-12 w-12 items-center justify-center bg-brand-secondary text-brand-navy">
+              <Mail className="h-5 w-5" />
+            </div>
+            <p className="font-display text-xl font-bold text-brand-text">Join the list</p>
+            <p className="mt-2 text-sm text-brand-muted">Drop your email — we&apos;ll take it from there.</p>
+            <form onSubmit={onSubmit} className="mt-8 space-y-3">
               <label htmlFor="newsletter-email" className="sr-only">
                 Email address
               </label>
@@ -53,15 +68,15 @@ export function NewsletterSection() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="min-h-[44px] flex-1 rounded-xl border border-black/5 bg-white px-4 py-3 text-sm outline-none transition-all duration-300 focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20"
+                className="min-h-[48px] w-full border border-brand-border bg-brand-bg px-4 py-3 text-sm outline-none transition-colors placeholder:text-brand-muted/60 focus:border-brand-secondary"
               />
-              <Button type="submit" shine disabled={loading} className="sm:shrink-0">
+              <Button type="submit" shine disabled={loading} className="w-full min-h-[48px]">
                 {loading ? "Subscribing…" : "Subscribe"}
               </Button>
             </form>
           </div>
-        </div>
-      </FadeInView>
-    </SectionShell>
+        </FadeInView>
+      </div>
+    </section>
   );
 }

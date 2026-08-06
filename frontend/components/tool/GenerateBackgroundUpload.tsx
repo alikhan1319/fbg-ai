@@ -7,11 +7,10 @@ import { ArrowRight, CheckCircle2, Lock, PaintBucket, Timer, Upload, Zap } from 
 import { generateBackground } from "@/services/api";
 import { ProcessingAnimation, ProcessingErrorCard } from "@/components/tool/remove-bg/ProcessingAnimation";
 import { ResultSection } from "@/components/tool/remove-bg/ResultSection";
+import { ToolDropzoneFrame, ToolWorkspace } from "@/components/tool/ToolWorkspace";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/ToastProvider";
 import { Button } from "@/components/ui/Button";
-import { PremiumCard } from "@/components/ui/motion";
-import { SectionHeading, SectionShell } from "@/components/ui/SectionHeading";
 import type { ToolPageConfig } from "@/components/tool/ToolLayout";
 import { BRAND } from "@/lib/constants";
 
@@ -263,162 +262,163 @@ export function GenerateBackgroundUpload({
 
   return (
     <>
-      <SectionShell id="upload" className="bg-brand-card/40" ariaLabel="Upload image">
-        <div className="section-divider absolute inset-x-0 top-0" />
-        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-          <div>
-            <SectionHeading
-              align="left"
-              label="Step 1"
-              title="Upload your image"
-              highlight=""
-              description="Upload image, remove current background, then generate a clean solid-color background."
-            />
-
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-brand-secondary/20 bg-brand-secondary/5 px-4 py-2 text-sm font-semibold text-brand-secondary">
-                <Zap className="h-4 w-4" aria-hidden />
-                ~2 to 4 seconds processing
-              </span>
-              {(["JPG", "PNG", "WEBP"] as const).map((fmt) => (
-                <span key={fmt} className="rounded-full border border-black/5 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-brand-muted">
-                  {fmt}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-brand-border bg-white/80 p-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-brand-text">
-                <PaintBucket className="h-4 w-4 text-brand-purple" />
-                Solid background color
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {SOLID_PRESETS.map((preset) => (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    disabled={uploadLocked}
-                    onClick={() => setSolidColor(preset.value)}
-                    className={cn(
-                      "min-h-[38px] rounded-lg border px-3 text-xs font-semibold transition-all",
-                      solidColor.toLowerCase() === preset.value.toLowerCase()
-                        ? "border-brand-secondary bg-brand-secondary/10 text-brand-secondary"
-                        : "border-black/10 bg-white text-brand-text hover:border-brand-secondary/40"
-                    )}
-                  >
-                    <span className="mr-2 inline-block h-3 w-3 rounded-full align-middle" style={{ backgroundColor: preset.value }} />
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-4 flex items-center gap-3">
-                <input
-                  type="color"
-                  value={solidColor}
-                  disabled={uploadLocked}
-                  onChange={(e) => setSolidColor(e.target.value)}
-                  className="h-11 w-14 rounded-lg border border-black/10 bg-white p-1"
-                />
-                <input
-                  value={solidColor}
-                  disabled={uploadLocked}
-                  onChange={(e) => setSolidColor(e.target.value)}
-                  className="min-h-[44px] w-40 rounded-xl border border-black/10 bg-white px-3 text-sm text-brand-text outline-none focus:border-brand-purple/40"
-                />
-                <p className="text-xs text-brand-muted">Or choose any custom color</p>
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <div className={cn("animated-border shadow-2xl shadow-brand-secondary/10", isDragActive && "brightness-110")}>
-                <div className="animated-border-inner p-6 sm:p-8">
-                  <AnimatePresence mode="wait">
-                    {!showUploadContent ? (
-                      <motion.div key="dropzone" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <div
-                          {...getRootProps()}
-                          className={cn(
-                            "flex min-h-[280px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 transition-all duration-300",
-                            isDragActive ? "border-brand-secondary/60 bg-white" : "border-brand-border bg-white/80"
-                          )}
-                        >
-                          <input {...getInputProps()} aria-label={config.uploadLabel} />
-                          <motion.div whileHover={{ scale: 1.06 }} className="flex h-20 w-20 items-center justify-center rounded-2xl bg-linear-to-br from-brand-secondary/15 to-brand-purple/15">
-                            <div className={cn("flex h-14 w-14 items-center justify-center rounded-xl text-white shadow-lg", config.heroGradientClass)}>
-                              <Upload className="h-7 w-7" />
-                            </div>
-                          </motion.div>
-                          <p className="mt-6 text-xl font-bold text-brand-text">Drop your image here</p>
-                          <p className="mt-2 text-sm text-brand-muted/80">or click to browse · Max 15MB</p>
-                          <span className={cn("btn-shine mt-8 inline-flex min-h-[44px] items-center rounded-xl px-10 py-3.5 text-sm font-semibold text-white shadow-lg", config.heroGradientClass)}>
-                            Choose File
-                          </span>
-                        </div>
-                      </motion.div>
-                    ) : state === "processing" ? (
-                      <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-                        <ProcessingAnimation progress={progress} active statusMessages={GEN_BG_STATUS} hintText="This takes about 2–4 seconds" />
-                      </motion.div>
-                    ) : state === "error" && errorMessage ? (
-                      <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <ProcessingErrorCard
-                          message={errorMessage}
-                          onRetry={() => {
-                            if (lastFileRef.current) void runProcessing(lastFileRef.current);
-                          }}
-                          onReset={reset}
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.div key="uploaded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-3 text-center text-sm text-emerald-700">
-                        <CheckCircle2 className="mx-auto mb-2 h-5 w-5" />
-                        Generation complete. See result below.
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              <div className="mt-5 flex flex-wrap justify-center gap-3 text-xs text-brand-muted/80">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1.5">
-                  <Lock className="h-3.5 w-3.5 text-brand-purple" aria-hidden />
-                  No signup required
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
-                  No watermark
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1.5">
-                  <Timer className="h-3.5 w-3.5 text-brand-accent" aria-hidden />
-                  Auto-delete in 1 hour
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <aside className="space-y-5 lg:sticky lg:top-28">
-            <PremiumCard className="p-6" glow>
-              <p className="text-xs font-bold uppercase tracking-wider text-brand-secondary">Why use this tool</p>
-              <ul className="mt-4 space-y-3">
-                {config.features.slice(0, 4).map((f) => (
-                  <li key={f.title} className="flex gap-3">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                    <div>
-                      <p className="text-sm font-semibold text-brand-text">{f.title}</p>
-                      <p className="text-xs leading-relaxed text-brand-muted">{f.description}</p>
-                    </div>
+      <ToolWorkspace
+        aside={
+          <div className="space-y-4">
+            <div className="border border-white/10 bg-white/[0.04] p-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-secondary">
+                Why this tool
+              </p>
+              <ul className="mt-5 space-y-4">
+                {config.features.slice(0, 4).map((f, i) => (
+                  <li key={f.title} className="border-t border-white/10 pt-4 first:border-0 first:pt-0">
+                    <p className="text-xs font-bold tabular-nums text-white/25">
+                      {String(i + 1).padStart(2, "0")}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-white">{f.title}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/45">{f.description}</p>
                   </li>
                 ))}
               </ul>
-            </PremiumCard>
-            <Button shine className={cn("min-h-[44px] w-full", config.heroGradientClass)} onClick={() => open()} disabled={uploadLocked}>
+            </div>
+            <Button
+              shine
+              className="btn-gradient min-h-[48px] w-full"
+              onClick={() => open()}
+              disabled={uploadLocked}
+            >
               {config.ctaLabel}
               <ArrowRight className="h-4 w-4" />
             </Button>
-          </aside>
+          </div>
+        }
+      >
+        <div>
+          <p className="studio-label">Workspace</p>
+          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Upload. Process. <span className="text-brand-secondary">Export.</span>
+          </h2>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/50">
+            Upload image, remove current background, then generate a clean solid-color background.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
+            <span className="inline-flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-brand-secondary" /> ~2–4s typical
+            </span>
+            <span>JPG · PNG · WEBP</span>
+            <span>Max 15MB</span>
+          </div>
+
+          <div className="mt-6 border border-white/10 bg-white/[0.04] p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-white">
+              <PaintBucket className="h-4 w-4 text-brand-secondary" />
+              Solid background color
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {SOLID_PRESETS.map((preset) => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  disabled={uploadLocked}
+                  onClick={() => setSolidColor(preset.value)}
+                  className={cn(
+                    "min-h-[38px] border px-3 text-xs font-semibold transition-colors",
+                    solidColor.toLowerCase() === preset.value.toLowerCase()
+                      ? "border-brand-secondary bg-brand-secondary/10 text-brand-secondary"
+                      : "border-white/12 bg-white/[0.04] text-white/70 hover:border-brand-secondary/40"
+                  )}
+                >
+                  <span className="mr-2 inline-block h-3 w-3 rounded-full align-middle" style={{ backgroundColor: preset.value }} />
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <input
+                type="color"
+                value={solidColor}
+                disabled={uploadLocked}
+                onChange={(e) => setSolidColor(e.target.value)}
+                className="h-11 w-14 border border-white/12 bg-white/[0.04] p-1"
+              />
+              <input
+                value={solidColor}
+                disabled={uploadLocked}
+                onChange={(e) => setSolidColor(e.target.value)}
+                className="min-h-[44px] w-40 border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-brand-secondary/40"
+              />
+              <p className="text-xs text-white/40">Or choose any custom color</p>
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <ToolDropzoneFrame active={isDragActive}>
+              <div className="p-5 sm:p-7">
+                <AnimatePresence mode="wait">
+                  {!showUploadContent ? (
+                    <motion.div key="dropzone" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <div
+                        {...getRootProps()}
+                        className={cn(
+                          "flex min-h-[280px] cursor-pointer flex-col items-center justify-center border border-dashed px-5 py-10 transition-colors",
+                          isDragActive
+                            ? "border-brand-secondary bg-brand-secondary/10"
+                            : "border-white/20 bg-white/[0.03] hover:border-brand-secondary/50"
+                        )}
+                      >
+                        <input {...getInputProps()} aria-label={config.uploadLabel} />
+                        <div className="flex h-14 w-14 items-center justify-center bg-brand-secondary text-brand-navy">
+                          <Upload className="h-6 w-6" />
+                        </div>
+                        <p className="mt-5 font-display text-xl font-bold text-white sm:text-2xl">
+                          Drop your image here
+                        </p>
+                        <p className="mt-2 text-sm text-white/45">or click to browse · Max 15MB</p>
+                        <span className="btn-gradient mt-7 inline-flex min-h-[44px] items-center px-8 text-sm font-semibold text-brand-navy">
+                          Choose File
+                        </span>
+                      </div>
+                    </motion.div>
+                  ) : state === "processing" ? (
+                    <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                      <ProcessingAnimation progress={progress} active statusMessages={GEN_BG_STATUS} hintText="This takes about 2–4 seconds" />
+                    </motion.div>
+                  ) : state === "error" && errorMessage ? (
+                    <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <ProcessingErrorCard
+                        message={errorMessage}
+                        onRetry={() => {
+                          if (lastFileRef.current) void runProcessing(lastFileRef.current);
+                        }}
+                        onReset={reset}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div key="uploaded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-3 text-center text-sm text-brand-secondary">
+                      <CheckCircle2 className="mx-auto mb-2 h-5 w-5" />
+                      Generation complete. See result below.
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </ToolDropzoneFrame>
+
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/40">
+              <span className="inline-flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-brand-secondary" /> No signup
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-brand-secondary" /> No watermark
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Timer className="h-3.5 w-3.5 text-brand-secondary" /> Auto-delete in 1 hour
+              </span>
+            </div>
+          </div>
         </div>
-      </SectionShell>
+      </ToolWorkspace>
 
       <AnimatePresence>
         {state === "success" && originalUrl && processedUrl && fileInfo && (

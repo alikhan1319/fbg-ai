@@ -84,6 +84,9 @@ export async function removeBackground(file) {
     ...data,
     original_image_url: resolveApiUrl(data.original_image_url),
     processed_image_url: resolveApiUrl(data.processed_image_url),
+    background_image_url: data.background_image_url
+      ? resolveApiUrl(data.background_image_url)
+      : undefined,
   };
 }
 

@@ -5,6 +5,11 @@ const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").rep
 const nextConfig: NextConfig = {
   images: {
     qualities: [100, 75],
+    // Omit `search` so cache-bust query strings like ?v=… are allowed on local assets.
+    localPatterns: [
+      { pathname: "/img/**" },
+      { pathname: "/images/**" },
+    ],
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "http", hostname: "localhost", port: "8000", pathname: "/uploads/**" },

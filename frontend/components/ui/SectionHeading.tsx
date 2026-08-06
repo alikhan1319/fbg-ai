@@ -12,6 +12,7 @@ interface SectionHeadingProps {
   description?: string;
   align?: "center" | "left";
   className?: string;
+  light?: boolean;
 }
 
 export function SectionHeading({
@@ -21,6 +22,7 @@ export function SectionHeading({
   description,
   align = "center",
   className,
+  light = false,
 }: SectionHeadingProps) {
   return (
     <motion.div
@@ -31,20 +33,31 @@ export function SectionHeading({
       className={cn("max-w-3xl", align === "center" && "mx-auto text-center", className)}
     >
       {label && (
-        <span className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-brand-secondary shadow-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand-purple animate-pulse" />
+        <span
+          className={cn(
+            "studio-label",
+            align === "center" && "mx-auto",
+            light && "text-brand-secondary"
+          )}
+        >
           {label}
         </span>
       )}
-      <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-brand-text sm:text-4xl lg:text-[2.75rem] lg:leading-tight">
+      <h2
+        className={cn(
+          "mt-5 font-display text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.65rem] lg:leading-[1.1]",
+          light ? "text-white" : "text-brand-text"
+        )}
+      >
         {title}{" "}
-        {highlight && <span className="gradient-text-animated">{highlight}</span>}
+        {highlight && <span className="text-brand-secondary">{highlight}</span>}
       </h2>
       {description && (
         <p
           className={cn(
-            "mt-4 text-base leading-relaxed text-brand-muted/90 sm:text-lg max-w-2xl",
-            align === "center" && "mx-auto"
+            "mt-4 text-base leading-relaxed sm:text-lg max-w-2xl",
+            align === "center" && "mx-auto",
+            light ? "text-white/65" : "text-brand-muted"
           )}
         >
           {description}
@@ -69,9 +82,9 @@ export function SectionShell({
     <section
       id={id}
       aria-label={ariaLabel}
-      className={cn("relative overflow-x-clip py-16 sm:py-24", className)}
+      className={cn("relative overflow-x-clip py-20 sm:py-28", className)}
     >
-      <div className="mx-auto w-full max-w-[1280px] px-8">{children}</div>
+      <div className="mx-auto w-full max-w-[1200px] px-6 sm:px-8">{children}</div>
     </section>
   );
 }

@@ -117,7 +117,7 @@ def _pip_install(python_exe: Path) -> None:
 
 def _missing_core_modules() -> list[str]:
     missing: list[str] = []
-    for name in ("uvicorn", "fastapi", "PIL", "cv2", "numpy", "rembg"):
+    for name in ("uvicorn", "fastapi", "PIL", "cv2", "numpy", "pymatting"):
         try:
             __import__(name)
         except ModuleNotFoundError:

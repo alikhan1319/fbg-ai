@@ -34,7 +34,11 @@ function useSimulatedProgress() {
     setProgress(8);
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      setProgress((p) => (p >= 92 ? p : p + Math.random() * 6 + 2));
+      setProgress((p) => {
+        if (p >= 99) return p;
+        if (p >= 92) return Math.min(99, p + 0.12 + Math.random() * 0.08);
+        return Math.min(92, p + Math.random() * 4 + 1.5);
+      });
     }, 280);
   }, []);
 
@@ -231,36 +235,38 @@ export function UploadHeroCard() {
     <>
       <motion.div
         id="hero-upload"
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45, duration: MOTION.scroll.duration, ease: MOTION.scroll.ease }}
-        className="mx-auto w-full max-w-3xl"
+        transition={{ delay: 0.35, duration: MOTION.scroll.duration, ease: MOTION.scroll.ease }}
+        className="mx-auto w-full max-w-xl"
       >
-        <div className={cn("animated-border shadow-2xl shadow-brand-secondary/10", isDragActive && "brightness-110")}>
-          <div className="animated-border-inner p-6 sm:p-10">
+        <div
+          className={cn(
+            "border border-white/15 bg-white/[0.04] backdrop-blur-sm transition-[border-color] duration-300",
+            isDragActive && "border-brand-secondary"
+          )}
+        >
+          <div className="p-5 sm:p-7">
             <AnimatePresence mode="wait">
               {!showUploadContent ? (
                 <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <div
                     {...getRootProps()}
                     className={cn(
-                      "flex min-h-[280px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 transition-all duration-300",
+                      "flex min-h-[260px] cursor-pointer flex-col items-center justify-center border border-dashed px-5 py-10 transition-colors duration-300",
                       isDragActive
-                        ? "border-brand-secondary bg-brand-secondary/5"
-                        : "border-brand-border/80 bg-brand-card/40 hover:border-brand-purple/50 hover:bg-white"
+                        ? "border-brand-secondary bg-brand-secondary/10"
+                        : "border-white/20 bg-white/[0.03] hover:border-brand-secondary/60 hover:bg-white/[0.06]"
                     )}
                   >
                     <input {...getInputProps()} aria-label="Upload image to remove background" />
-                    <motion.div
-                      whileHover={{ scale: 1.06 }}
-                      className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-secondary/15 to-brand-purple/15"
-                    >
-                      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-brand-secondary to-brand-purple text-white shadow-lg">
-                        <Upload className="h-7 w-7" />
-                      </div>
-                    </motion.div>
-                    <p className="mt-6 text-xl font-bold text-brand-text sm:text-2xl">Drop your image here</p>
-                    <p className="mt-2 text-sm text-brand-muted/80">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-md bg-brand-secondary text-brand-navy">
+                      <Upload className="h-6 w-6" />
+                    </div>
+                    <p className="mt-5 font-display text-xl font-bold text-white sm:text-2xl">
+                      Drop your image here
+                    </p>
+                    <p className="mt-2 text-sm text-white/50">
                       or click to browse · JPG, PNG, WebP · Max 15MB
                     </p>
                     <button
@@ -269,33 +275,33 @@ export function UploadHeroCard() {
                         e.stopPropagation();
                         open();
                       }}
-                      className="btn-gradient btn-shine mt-8 inline-flex min-h-[44px] items-center rounded-xl px-10 py-3.5 text-sm font-semibold text-white shadow-lg"
+                      className="btn-gradient btn-shine mt-7 inline-flex min-h-[44px] items-center rounded-md px-8 py-3 text-sm font-semibold text-brand-navy"
                     >
                       Choose File
                     </button>
                   </div>
 
-                  <div className="mt-8">
-                    <p className="text-center text-xs font-semibold uppercase tracking-wider text-brand-muted">
-                      Try this →
+                  <div className="mt-6">
+                    <p className="text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">
+                      Try a sample
                     </p>
-                    <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+                    <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                       {UPLOAD_DEMO_CHIPS.map((chip) => (
                         <button
                           key={chip.id}
                           type="button"
                           onClick={() => void loadDemo(chip.full)}
                           disabled={uploadLocked}
-                          className="group flex items-center gap-2 rounded-full border border-brand-border bg-white px-3 py-1.5 shadow-sm transition-all duration-300 hover:border-brand-secondary/40 hover:shadow-md disabled:opacity-50"
+                          className="group flex items-center gap-2 border border-white/12 bg-white/[0.04] px-2.5 py-1.5 transition-colors hover:border-brand-secondary/50 disabled:opacity-50"
                         >
                           <Image
                             src={chip.thumb}
                             alt=""
                             width={28}
                             height={28}
-                            className="h-7 w-7 rounded-full object-cover"
+                            className="h-7 w-7 object-cover"
                           />
-                          <span className="text-xs font-medium text-brand-text group-hover:text-brand-secondary">
+                          <span className="text-xs font-medium text-white/70 group-hover:text-brand-secondary">
                             {chip.label}
                           </span>
                         </button>
@@ -309,22 +315,13 @@ export function UploadHeroCard() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="space-y-6 py-4"
                 >
-                  {localPreview && (
-                    <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-gray-50 p-3">
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-200">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={localPreview} alt="Uploaded preview" className="h-full w-full object-cover" />
-                      </div>
-                      <div className="min-w-0 text-left">
-                        <p className="truncate text-sm font-medium text-gray-700">{fileInfo?.name}</p>
-                        {fileInfo && <p className="text-xs text-gray-400">{formatBytes(fileInfo.size)}</p>}
-                        <p className="mt-1 text-xs text-brand-secondary">AI is removing your background…</p>
-                      </div>
-                    </div>
-                  )}
-                  <ProcessingAnimation progress={progress} active />
+                  <ProcessingAnimation
+                    progress={progress}
+                    active
+                    previewUrl={localPreview}
+                    hintText="High-quality cutout — usually ready in a few seconds"
+                  />
                 </motion.div>
               ) : state === "error" && errorMessage ? (
                 <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -343,17 +340,17 @@ export function UploadHeroCard() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-col items-center gap-5 py-4 sm:flex-row sm:items-start"
                 >
-                  <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl border border-gray-200 shadow-md sm:h-40 sm:w-40">
+                  <div className="relative h-32 w-32 shrink-0 overflow-hidden border border-white/15 sm:h-40 sm:w-40">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={localPreview!} alt="Uploaded preview" className="h-full w-full object-cover" />
                   </div>
                   <div className="flex-1 text-center sm:text-left">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
+                    <span className="inline-flex items-center gap-2 border border-brand-secondary/40 bg-brand-secondary/10 px-3 py-2 text-sm font-medium text-brand-secondary">
                       <CheckCircle2 className="h-4 w-4" />
                       Background removed — see results below
                     </span>
                     {fileInfo && (
-                      <p className="mt-3 text-sm text-gray-500">
+                      <p className="mt-3 text-sm text-white/45">
                         {fileInfo.name} · {formatBytes(fileInfo.size)}
                       </p>
                     )}
@@ -370,7 +367,7 @@ export function UploadHeroCard() {
             </AnimatePresence>
           </div>
         </div>
-        <p className="mt-5 text-center text-xs text-brand-muted/80">
+        <p className="mt-4 text-center text-xs text-white/40">
           Images processed securely · Auto-deleted within 1 hour ·{" "}
           <a href="/privacy" className="underline hover:text-brand-secondary">
             Privacy Policy
@@ -389,7 +386,7 @@ export function UploadHeroCard() {
             className="mt-10"
           >
             <ResultSection
-              originalUrl={originalUrl}
+              originalUrl={localPreview || originalUrl}
               processedUrl={processedUrl}
               originalSize={fileInfo.size}
               processedSize={processedSize}
@@ -397,6 +394,9 @@ export function UploadHeroCard() {
               heroGradientClass="btn-gradient"
               downloadLabel="Download PNG"
               successLabel="Background removed successfully!"
+              useCompareSlider
+              processedLabel="Transparent PNG"
+              checkerboardProcessed
               onReset={reset}
               onDownload={() => void downloadProcessed()}
               onCopyLink={() => {

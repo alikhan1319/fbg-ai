@@ -9,34 +9,54 @@ const icons = { upload: Upload, wand: Wand2, cpu: Cpu, download: Download } as c
 
 export function HowItWorksSection() {
   return (
-    <SectionShell id="how-it-works" className="bg-brand-card" ariaLabel="How it works">
-      <div className="section-divider absolute inset-x-0 top-0" />
-      <SectionHeading
-        label="Simple workflow"
-        title="How it"
-        highlight="works"
-        description="Four easy steps from upload to download — no technical skills required."
-      />
+    <SectionShell id="how-it-works" className="bg-brand-navy" ariaLabel="How it works">
+      <div className="grid gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <SectionHeading
+            light
+            align="left"
+            label="Simple workflow"
+            title="Four steps."
+            highlight="Zero friction."
+            description="Upload, process, refine, download — no account wall in the way."
+          />
+        </div>
 
-      <StaggerGrid as="ol" className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {HOW_IT_WORKS.map((step) => {
-          const Icon = icons[step.icon as keyof typeof icons];
-          return (
-            <StaggerGridItem key={step.step} className="list-none">
-              <div className="luxury-card relative h-full p-6 text-center">
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary px-3 py-0.5 text-xs font-bold text-white shadow-md">
-                  Step {step.step}
-                </span>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-primary/10 to-brand-accent/10 text-brand-primary transition-all duration-300 group-hover:from-brand-primary group-hover:to-brand-secondary group-hover:text-white">
-                  <Icon className="h-7 w-7" />
+        <StaggerGrid as="ol" className="relative space-y-0">
+          {HOW_IT_WORKS.map((step, i) => {
+            const Icon = icons[step.icon as keyof typeof icons];
+            const isLast = i === HOW_IT_WORKS.length - 1;
+            return (
+              <StaggerGridItem key={step.step} className="list-none">
+                <div className={`relative flex gap-6 pb-12 sm:gap-8 ${isLast ? "pb-0" : ""}`}>
+                  {!isLast && (
+                    <div
+                      className="absolute left-[23px] top-14 bottom-0 w-px bg-white/10 sm:left-[27px]"
+                      aria-hidden
+                    />
+                  )}
+                  <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center bg-brand-secondary text-brand-navy sm:h-14 sm:w-14">
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div className="min-w-0 flex-1 pt-1">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="font-display text-4xl font-bold tabular-nums leading-none text-white/15 sm:text-5xl">
+                        {String(step.step).padStart(2, "0")}
+                      </span>
+                      <h3 className="font-display text-xl font-bold text-white sm:text-2xl">
+                        {step.title}
+                      </h3>
+                    </div>
+                    <p className="mt-3 max-w-md text-sm leading-relaxed text-white/50 sm:text-base">
+                      {step.description}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="mt-4 font-bold text-brand-text">{step.title}</h3>
-                <p className="mt-2 text-sm text-brand-muted">{step.description}</p>
-              </div>
-            </StaggerGridItem>
-          );
-        })}
-      </StaggerGrid>
+              </StaggerGridItem>
+            );
+          })}
+        </StaggerGrid>
+      </div>
     </SectionShell>
   );
 }

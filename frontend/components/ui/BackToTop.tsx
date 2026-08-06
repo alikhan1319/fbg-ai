@@ -22,7 +22,7 @@ export function BackToTop() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16 }}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-24 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-secondary to-brand-purple text-white shadow-xl transition-transform hover:scale-105 sm:bottom-8"
+          className="fixed bottom-24 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-md bg-brand-secondary text-brand-navy transition-transform hover:scale-105 sm:bottom-8"
           aria-label="Back to top"
         >
           <ArrowUp className="h-5 w-5" />

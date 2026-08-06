@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 import { getCmsBlogPostsForPage, getCmsBlogSlugs } from "@/lib/cms-server";
+import { getAllUseCasePaths } from "@/lib/use-case-landings";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL.replace(/\/$/, "");
@@ -14,6 +15,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     i === 0 ? "/blog" : `/blog?page=${i + 1}`
   );
 
+  const useCasePaths = getAllUseCasePaths();
+
+  const highPriority = new Set([
+    "",
+    "/remove-bg",
+    "/about",
+    "/contact",
+    "/blog",
+    "/use-cases",
+    ...useCasePaths,
+  ]);
+
   const routes = [
     "",
     "/remove-bg",
@@ -22,6 +35,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/remove-watermark",
     "/blur-background",
     "/enhance-image",
+    ...useCasePaths,
+    "/use-cases",
     "/about",
     "/contact",
     ...blogPages,
@@ -34,11 +49,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${base}${path}`,
     lastModified: new Date(),
     changeFrequency: path === "" ? "weekly" : "monthly",
-    priority:
-      path === ""
-        ? 1
-        : path === "/about" || path === "/remove-bg" || path === "/contact" || path.startsWith("/blog")
-          ? 0.8
-          : 0.6,
+    priority: path === "" ? 1 : highPriority.has(path) || path.startsWith("/blog") ? 0.8 : 0.6,
   }));
 }

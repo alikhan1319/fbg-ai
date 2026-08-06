@@ -1,38 +1,35 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/constants";
 import { type ToolPageConfig } from "@/components/tool/ToolLayout";
 import { ToolPageWrapper } from "@/components/tool/ToolPageWrapper";
-import { ToolSoftwareApplicationSchema } from "@/components/tool/ToolSchemas";
+import {
+  BreadcrumbSchema,
+  ToolSoftwareApplicationSchema,
+  ToolWebPageSchema,
+} from "@/components/tool/ToolSchemas";
+import { ENHANCE_SEO, toolOgImage } from "@/lib/seo";
 
-const urlPath = "/enhance-image";
-const og = `${SITE_URL.replace(/\/$/, "")}${urlPath}/opengraph-image`;
+const urlPath = ENHANCE_SEO.path;
+const og = toolOgImage(urlPath);
 
 export const metadata: Metadata = {
-  title: "AI Image Enhancer | Improve Photo Quality Online",
-  description:
-    "Enhance images with FBR AI: auto color correction, brightness/contrast, sharpening, and denoise controls for clean, studio-ready results. Free to start, no signup.",
-  keywords: [
-    "image enhancer",
-    "photo enhancer AI",
-    "improve image quality",
-    "denoise photo",
-    "sharpen image",
-    "color correction",
-  ],
-  alternates: { canonical: urlPath },
+  title: ENHANCE_SEO.title,
+  description: ENHANCE_SEO.description,
+  keywords: [...ENHANCE_SEO.keywords],
+  alternates: { canonical: ENHANCE_SEO.canonical },
   openGraph: {
-    title: "AI Image Enhancer - FBR AI",
-    description: "Improve photo quality with color correction, sharpening, and denoise.",
+    title: ENHANCE_SEO.title,
+    description: ENHANCE_SEO.description,
     url: urlPath,
     type: "website",
-    images: [{ url: og, width: 1200, height: 630, alt: "FBR AI Image Enhancer" }],
+    images: [{ url: og, width: 1200, height: 630, alt: "FBG AI Image Enhancer" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Image Enhancer - FBR AI",
-    description: "Enhance photos with AI in seconds.",
+    title: ENHANCE_SEO.title,
+    description: ENHANCE_SEO.description,
     images: [og],
   },
+  robots: { index: true, follow: true },
 };
 
 const config: ToolPageConfig = {
@@ -139,9 +136,16 @@ const config: ToolPageConfig = {
 export default function EnhanceImagePage() {
   return (
     <>
+      <ToolWebPageSchema name={ENHANCE_SEO.title} description={ENHANCE_SEO.description} urlPath={urlPath} />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Image Enhancer", path: urlPath },
+        ]}
+      />
       <ToolSoftwareApplicationSchema
-        name="FBR AI Image Enhancer"
-        description={metadata.description as string}
+        name="FBG AI Image Enhancer"
+        description={ENHANCE_SEO.description}
         urlPath={urlPath}
       />
       <ToolPageWrapper config={config} />

@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { BRAND } from "@/lib/constants";
+import { absoluteUrl } from "@/lib/seo";
 
-export const metadata = { title: `Sign in | ${BRAND.name}` };
+export const metadata: Metadata = {
+  title: `Sign in | ${BRAND.name}`,
+  robots: { index: false, follow: false },
+  alternates: { canonical: absoluteUrl("/sign-in") },
+};
 
 export default function SignInPage() {
   return (
