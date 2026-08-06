@@ -77,7 +77,7 @@ export function BlogPostForm({ postId }: Props) {
         setContentHtml(
           (post.contentHtml || "<p></p>").replace(
             /src="(\/blog-media\/[^"]+)"/g,
-            (_, path) => `src="${resolveBlogImage(path)}"`
+            (_match: string, path: string) => `src="${resolveBlogImage(path)}"`
           )
         );
       })

@@ -22,7 +22,46 @@ const ACTIVITY_ICONS = {
   system: Sparkles,
 } as const;
 
-type DashboardData = Awaited<ReturnType<typeof fetchAdminDashboard>>;
+type DashboardStat = {
+  label: string;
+  value: string | number;
+  change?: string;
+  trend?: string;
+  [key: string]: unknown;
+};
+
+type DashboardTool = {
+  id: string;
+  name: string;
+  sessions: number;
+  share: number;
+};
+
+type DashboardActivity = {
+  id: string | number;
+  type: string;
+  action: string;
+  detail: string;
+  time: string;
+};
+
+type DashboardPost = {
+  id: number;
+  slug: string;
+  title: string;
+  category: string;
+  date: string;
+};
+
+type DashboardData = {
+  stats: DashboardStat[];
+  totalPosts: number;
+  totalToolSessions?: number;
+  blogCategories: { category: string; count: number }[];
+  toolUsage: DashboardTool[];
+  recentActivity: DashboardActivity[];
+  latestPosts: DashboardPost[];
+};
 
 export function DashboardContent() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -31,7 +70,7 @@ export function DashboardContent() {
 
   useEffect(() => {
     fetchAdminDashboard()
-      .then(setData)
+      .then((payload) => setData(payload as DashboardData))
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -74,7 +113,13 @@ export function DashboardContent() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {data.stats.map((stat) => (
-          <AdminStatCard key={stat.label} {...stat} trend={stat.trend as "up" | "down" | "neutral"} />
+          <AdminStatCard
+            key={stat.label}
+            label={stat.label}
+            value={String(stat.value)}
+            change={String(stat.change ?? "")}
+            trend={(stat.trend as "up" | "down" | "neutral") || "neutral"}
+          />
         ))}
       </div>
 

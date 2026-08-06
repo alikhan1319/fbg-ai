@@ -181,7 +181,7 @@ export function LegalPageEditor({ slug, title, previewHref }: Props) {
                 </div>
                 <div className="mt-4">
                   <label className="mb-2 block text-xs font-semibold text-brand-muted">Content</label>
-                  <WordPressEditor value={section.contentHtml || "<p></p>"} onChange={(html) => updateSection(index, { contentHtml: html })} />
+                  <WordPressEditor content={section.contentHtml || "<p></p>"} onChange={(html) => updateSection(index, { contentHtml: html })} />
                 </div>
                 <button type="button" onClick={() => setSections((rows) => rows.filter((_, i) => i !== index))} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-red-600">
                   <Trash2 className="h-3.5 w-3.5" />

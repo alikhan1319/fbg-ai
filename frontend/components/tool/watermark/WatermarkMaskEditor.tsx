@@ -428,9 +428,8 @@ export const WatermarkMaskEditor = forwardRef<WatermarkMaskEditorHandle, Props>(
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
-            variant={mode === "brush" ? "default" : "outline"}
-            size="sm"
-            className={cn(mode === "brush" && "bg-brand-secondary text-white")}
+            variant={mode === "brush" ? "primary" : "outline"}
+            className={cn("min-h-[36px] px-3 py-2 text-xs", mode === "brush" && "bg-brand-secondary text-white")}
             onClick={() => setMode("brush")}
           >
             <Paintbrush className="mr-1.5 h-4 w-4" />
@@ -438,9 +437,8 @@ export const WatermarkMaskEditor = forwardRef<WatermarkMaskEditorHandle, Props>(
           </Button>
           <Button
             type="button"
-            variant={mode === "rectangle" ? "default" : "outline"}
-            size="sm"
-            className={cn(mode === "rectangle" && "bg-brand-secondary text-white")}
+            variant={mode === "rectangle" ? "primary" : "outline"}
+            className={cn("min-h-[36px] px-3 py-2 text-xs", mode === "rectangle" && "bg-brand-secondary text-white")}
             onClick={() => setMode("rectangle")}
           >
             <Square className="mr-1.5 h-4 w-4" />
@@ -448,14 +446,14 @@ export const WatermarkMaskEditor = forwardRef<WatermarkMaskEditorHandle, Props>(
           </Button>
           <Button
             type="button"
-            variant={mode === "eraser" ? "default" : "outline"}
-            size="sm"
+            variant={mode === "eraser" ? "primary" : "outline"}
+            className="min-h-[36px] px-3 py-2 text-xs"
             onClick={() => setMode("eraser")}
           >
             <Eraser className="mr-1.5 h-4 w-4" />
             Eraser
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={clearMask}>
+          <Button type="button" variant="outline" className="min-h-[36px] px-3 py-2 text-xs" onClick={clearMask}>
             <RotateCcw className="mr-1.5 h-4 w-4" />
             Clear
           </Button>
