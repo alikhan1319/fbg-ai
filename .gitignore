@@ -20,6 +20,8 @@ __pycache__/
 # uploads
 uploads/
 media/
+backend/blog_media/
+backend/uploads/
 
 # local smoke / debug images
 backend/_*.png
