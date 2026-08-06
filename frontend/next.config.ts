@@ -1,11 +1,12 @@
 import type { NextConfig } from "next";
 
 /**
- * Rewrites must hit FastAPI directly. On the VPS set API_INTERNAL_URL=http://127.0.0.1:8000
- * so /blog-media and /uploads do not loop through the public HTTPS domain.
+ * Rewrites must hit FastAPI directly. On the VPS prefer an internal URL
+ * (API_INTERNAL_URL or INTERNAL_API_URL) so /blog-media does not depend on public DNS.
  */
 const rewriteApi = (
   process.env.API_INTERNAL_URL ||
+  process.env.INTERNAL_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:8000"
 ).replace(/\/$/, "");
