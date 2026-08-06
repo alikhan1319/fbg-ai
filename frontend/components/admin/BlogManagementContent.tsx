@@ -32,7 +32,7 @@ export function BlogManagementContent() {
   const loadPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchAdminBlogPosts();
+      const data = (await fetchAdminBlogPosts()) as BlogRow[];
       setPosts(data);
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to load posts.");
@@ -69,9 +69,9 @@ export function BlogManagementContent() {
     setDeletingId(post.id);
     try {
       await deleteAdminBlogPost(post.id);
-      const refreshed = await fetchAdminBlogPosts();
+      const refreshed = (await fetchAdminBlogPosts()) as BlogRow[];
       setPosts(refreshed);
-      const stillThere = refreshed.some((row) => row.id === post.id);
+      const stillThere = refreshed.some((row: BlogRow) => row.id === post.id);
       if (stillThere) {
         showToast("Delete did not save. Restart the backend and try again.", "error");
         return;
