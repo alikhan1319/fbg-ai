@@ -30,7 +30,7 @@ export function HeroSection() {
             animate="visible"
             className="max-w-xl"
           >
-            <motion.h1 variants={pageLoadItem} className="hero-headline text-white">
+            <motion.h1 variants={pageLoadItem} className="hero-headline !text-white">
               Free Background Remover AI
               <span className="mt-1 block text-brand-secondary">Keep the subject.</span>
             </motion.h1>

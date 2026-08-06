@@ -111,6 +111,12 @@ h4 {
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1.02;
+  color: #ffffff;
+}
+
+.hero-studio h1,
+.hero-studio .hero-headline {
+  color: #ffffff;
 }
 
 .hero-subhead {
