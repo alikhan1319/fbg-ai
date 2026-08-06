@@ -56,7 +56,7 @@ export function BlogArticleContent({
           <div className="pointer-events-none absolute -right-16 top-32 h-64 w-64 rounded-full bg-brand-secondary/10 blur-3xl" aria-hidden />
 
           <div className="relative mx-auto w-full max-w-[1280px] px-8">
-            <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-2 text-sm text-brand-muted">
+            <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-2 text-sm text-white/50">
               <Link href="/" className="font-medium transition-colors hover:text-brand-secondary">
                 Home
               </Link>
@@ -65,7 +65,7 @@ export function BlogArticleContent({
                 Blog
               </Link>
               <ChevronRight className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
-              <span className="line-clamp-1 font-semibold text-brand-text">{article.category}</span>
+              <span className="line-clamp-1 font-semibold text-white">{article.category}</span>
             </nav>
 
             <motion.div
@@ -78,13 +78,13 @@ export function BlogArticleContent({
                 <Sparkles className="h-3.5 w-3.5 text-brand-purple" aria-hidden />
                 {article.category}
               </span>
-              <h1 className="mt-6 text-3xl font-extrabold leading-tight tracking-tight text-brand-text sm:text-4xl lg:text-[2.75rem]">
+              <h1 className="mt-6 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-[2.75rem]">
                 {article.title}
               </h1>
-              <p className="mt-5 max-w-3xl text-lg leading-relaxed text-brand-muted">
+              <p className="mt-5 max-w-3xl text-lg leading-relaxed text-white/65">
                 {article.excerpt}
               </p>
-              <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-brand-muted">
+              <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/55">
                 <span className="inline-flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-brand-secondary" aria-hidden />
                   {article.date}
