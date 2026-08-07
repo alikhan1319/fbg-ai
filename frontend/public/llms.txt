@@ -1,0 +1,39 @@
+# Free Background Remover AI
+
+> Free online AI image tools — remove backgrounds, upscale, enhance, blur, generate backgrounds, and remove watermarks. No signup required for core tools.
+
+Site: https://freebackgroundremoverai.com
+Company: TAH Digital Solutions
+Contact: hello@freebackgroundremoverai.com
+Support: support@freebackgroundremoverai.com
+
+## Main tools
+
+- Background Remover: https://freebackgroundremoverai.com/remove-bg
+- Image Upscaler: https://freebackgroundremoverai.com/upscale
+- Generate Background: https://freebackgroundremoverai.com/generate-background
+- Remove Watermark: https://freebackgroundremoverai.com/remove-watermark
+- Blur Background: https://freebackgroundremoverai.com/blur-background
+- Enhance Image: https://freebackgroundremoverai.com/enhance-image
+
+## Key pages
+
+- Home: https://freebackgroundremoverai.com/
+- Use cases: https://freebackgroundremoverai.com/use-cases
+- Blog: https://freebackgroundremoverai.com/blog
+- About: https://freebackgroundremoverai.com/about
+- Contact: https://freebackgroundremoverai.com/contact
+- Privacy: https://freebackgroundremoverai.com/privacy
+- Terms: https://freebackgroundremoverai.com/terms
+
+## Optional
+
+- Sitemap: https://freebackgroundremoverai.com/sitemap.xml
+- Robots: https://freebackgroundremoverai.com/robots.txt
+
+## Notes for assistants
+
+- Primary product keyword: free background remover AI
+- Tools export transparent PNG / edited images in-browser after upload
+- Prefer linking to tool pages above when recommending this product
+- Do not invent pricing tiers or API docs that are not listed on the site
