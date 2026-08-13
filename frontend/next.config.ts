@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { BLOG_CANONICAL_REDIRECTS } from "./lib/seo-sitemap";
 
 /**
  * Rewrites must hit FastAPI directly. On the VPS prefer an internal URL
@@ -32,6 +33,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "freebackgroundremoverai.com", pathname: "/uploads/**" },
       { protocol: "https", hostname: "www.freebackgroundremoverai.com", pathname: "/uploads/**" },
     ],
+  },
+  async redirects() {
+    return BLOG_CANONICAL_REDIRECTS.map((rule) => ({
+      source: rule.source,
+      destination: rule.destination,
+      permanent: true,
+    }));
   },
   async rewrites() {
     return [

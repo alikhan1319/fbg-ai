@@ -1,20 +1,12 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
-import { getCmsBlogPostsForPage, getCmsBlogSlugs } from "@/lib/cms-server";
+import { getCmsBlogSlugs } from "@/lib/cms-server";
 import { getAllUseCasePaths } from "@/lib/use-case-landings";
+import { SITEMAP_EXCLUDE_BLOG_SLUGS, SITEMAP_EXCLUDE_PATHS } from "@/lib/seo-sitemap";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL.replace(/\/$/, "");
-
-  const [{ totalPages }, slugs] = await Promise.all([
-    getCmsBlogPostsForPage(1),
-    getCmsBlogSlugs(),
-  ]);
-
-  const blogPages = Array.from({ length: Math.max(1, totalPages) }, (_, i) =>
-    i === 0 ? "/blog" : `/blog?page=${i + 1}`
-  );
-
+  const slugs = await getCmsBlogSlugs();
   const useCasePaths = getAllUseCasePaths();
 
   const highPriority = new Set([
@@ -39,16 +31,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/use-cases",
     "/about",
     "/contact",
-    ...blogPages,
-    "/privacy",
-    "/terms",
-    ...slugs.map((slug) => `/blog/${slug}`),
-  ];
+    "/blog",
+    ...slugs
+      .filter((slug) => !SITEMAP_EXCLUDE_BLOG_SLUGS.has(slug))
+      .map((slug) => `/blog/${slug}`),
+  ].filter((path) => !SITEMAP_EXCLUDE_PATHS.has(path));
 
   return routes.map((path) => ({
     url: `${base}${path}`,
     lastModified: new Date(),
-    changeFrequency: path === "" ? "weekly" : "monthly",
+    changeFrequency: path === "" || path === "/blog" ? "weekly" : "monthly",
     priority: path === "" ? 1 : highPriority.has(path) || path.startsWith("/blog") ? 0.8 : 0.6,
   }));
 }
