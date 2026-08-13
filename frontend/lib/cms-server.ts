@@ -84,9 +84,22 @@ export async function getCmsBlogArticle(slug: string): Promise<CmsBlogArticle | 
   return fetchFromApi<CmsBlogArticle>(`/api/blog/${encodeURIComponent(slug)}`);
 }
 
+export type CmsBlogSitemapEntry = {
+  slug: string;
+  lastmod?: string | null;
+};
+
 export async function getCmsBlogSlugs(): Promise<string[]> {
   const data = await fetchFromApi<{ slugs: string[] }>("/api/blog/slugs");
   return data?.slugs ?? [];
+}
+
+export async function getCmsBlogSitemapEntries(): Promise<CmsBlogSitemapEntry[]> {
+  const data = await fetchFromApi<{ slugs?: string[]; entries?: CmsBlogSitemapEntry[] }>(
+    "/api/blog/slugs"
+  );
+  if (data?.entries?.length) return data.entries;
+  return (data?.slugs ?? []).map((slug) => ({ slug }));
 }
 
 export async function getCmsRelatedBlogPosts(slug: string, limit = 3): Promise<CmsBlogPost[]> {

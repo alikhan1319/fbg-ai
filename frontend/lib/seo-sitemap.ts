@@ -11,6 +11,12 @@ export const SITEMAP_EXCLUDE_PATHS = new Set([
 ]);
 
 /**
+ * Last substantial content update for static marketing / tool pages
+ * (not the sitemap generation time). Bump only when those pages actually change.
+ */
+export const STATIC_PAGE_LASTMOD = "2026-08-06";
+
+/**
  * Duplicate / off-topic blog slugs to omit from the sitemap.
  * Redirected slugs are also listed here so Google is not asked to recrawl them.
  */

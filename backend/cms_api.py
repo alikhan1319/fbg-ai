@@ -186,16 +186,27 @@ def list_blog_posts(
     )
 
 
+def _lastmod_iso(dt: datetime | None) -> str | None:
+    if not dt:
+        return None
+    return dt.date().isoformat()
+
+
 @cms_router.get("/blog/slugs")
-def list_blog_slugs(db: Session = Depends(get_db_dep)) -> dict[str, list[str]]:
-    slugs = [
-        row.slug
-        for row in db.query(BlogPost.slug)
+def list_blog_slugs(db: Session = Depends(get_db_dep)) -> dict:
+    rows = (
+        db.query(BlogPost.slug, BlogPost.updated_at, BlogPost.published_at, BlogPost.created_at)
         .filter(BlogPost.status == "published")
         .order_by(BlogPost.published_at.desc())
         .all()
-    ]
-    return {"slugs": slugs}
+    )
+    slugs: list[str] = []
+    entries: list[dict[str, str | None]] = []
+    for row in rows:
+        slugs.append(row.slug)
+        stamp = row.updated_at or row.published_at or row.created_at
+        entries.append({"slug": row.slug, "lastmod": _lastmod_iso(stamp)})
+    return {"slugs": slugs, "entries": entries}
 
 
 @cms_router.get("/blog/{slug}", response_model=BlogArticlePublic)
