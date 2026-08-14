@@ -86,7 +86,7 @@ export function ToolsGridSection() {
                   id={tool.id}
                   className="group flex items-start gap-5 border border-brand-border bg-white p-5 transition-colors hover:border-brand-navy hover:bg-brand-navy sm:items-center sm:p-6"
                 >
-                  <span className="font-display text-2xl font-bold tabular-nums text-brand-border transition-colors group-hover:text-white/20 sm:text-3xl">
+                  <span className="font-display text-2xl font-bold tabular-nums text-brand-muted transition-colors group-hover:text-white/70 sm:text-3xl">
                     {String(i + 2).padStart(2, "0")}
                   </span>
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-brand-border text-brand-navy transition-colors group-hover:border-brand-secondary/40 group-hover:text-brand-secondary">

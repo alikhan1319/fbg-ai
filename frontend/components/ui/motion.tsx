@@ -64,14 +64,17 @@ export function StaggerGrid({
 export function StaggerGridItem({
   children,
   className,
+  as: Component = "div",
 }: {
   children: ReactNode;
   className?: string;
+  as?: "div" | "li";
 }) {
+  const MotionComponent = Component === "li" ? motion.li : motion.div;
   return (
-    <motion.div variants={staggerItem} className={className}>
+    <MotionComponent variants={staggerItem} className={className}>
       {children}
-    </motion.div>
+    </MotionComponent>
   );
 }
 

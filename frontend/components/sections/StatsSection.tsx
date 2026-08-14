@@ -72,7 +72,7 @@ export function StatsSection() {
                 prefix={"prefix" in s ? s.prefix : ""}
                 decimals={"decimals" in s ? s.decimals : 0}
               />
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/40">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/75">
                 {s.label}
               </p>
             </FadeInView>

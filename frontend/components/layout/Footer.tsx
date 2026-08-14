@@ -221,7 +221,7 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-6 text-sm leading-relaxed text-white/40">
+              <p className="mt-6 text-sm leading-relaxed text-white/75">
                 Questions?{" "}
                 <Link href="/contact" className="text-brand-secondary hover:underline">
                   Contact support
@@ -231,7 +231,7 @@ export function Footer() {
             </Column>
 
             <Column title="Connect">
-              <p className="text-sm leading-relaxed text-white/40">
+              <p className="text-sm leading-relaxed text-white/75">
                 Product updates, tips, and new AI features.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
@@ -257,7 +257,7 @@ export function Footer() {
         <div className="mx-auto max-w-6xl px-6 py-10 sm:py-12">
           <div className="mx-auto max-w-xl text-center">
             <p className="font-display text-lg font-bold text-white">Get editing tips in your inbox</p>
-            <p className="mt-1 text-sm text-white/40">Weekly shortcuts — unsubscribe anytime.</p>
+            <p className="mt-1 text-sm text-white/75">Weekly shortcuts — unsubscribe anytime.</p>
           </div>
           <form
             onSubmit={onNewsletter}
@@ -287,7 +287,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-center text-xs text-white/35 sm:flex-row sm:text-left">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-center text-xs text-white/75 sm:flex-row sm:text-left">
         <div className="space-y-2">
           <p>
             © {year} {BRAND.name}. All rights reserved.

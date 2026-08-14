@@ -42,7 +42,7 @@ export function BlogPostCard({
       <div className="flex flex-1 flex-col p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-brand-muted">
           {!showCategory && (
-            <span className="font-semibold uppercase tracking-wider text-brand-secondary">
+            <span className="font-semibold uppercase tracking-wider text-brand-ink">
               {post.category}
             </span>
           )}
@@ -62,7 +62,7 @@ export function BlogPostCard({
         <p className="mt-2 flex-1 text-sm leading-relaxed text-brand-muted">{post.excerpt}</p>
         <Link
           href={`/blog/${post.slug}`}
-          className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-secondary transition-all duration-300 group-hover:gap-2"
+          className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-ink transition-all duration-300 group-hover:gap-2"
         >
           Read article
           <ArrowRight className="h-4 w-4" aria-hidden />

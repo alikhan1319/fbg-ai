@@ -27,7 +27,7 @@ export function HowItWorksSection() {
             const Icon = icons[step.icon as keyof typeof icons];
             const isLast = i === HOW_IT_WORKS.length - 1;
             return (
-              <StaggerGridItem key={step.step} className="list-none">
+              <StaggerGridItem as="li" key={step.step}>
                 <div className={`relative flex gap-6 pb-12 sm:gap-8 ${isLast ? "pb-0" : ""}`}>
                   {!isLast && (
                     <div
@@ -40,7 +40,7 @@ export function HowItWorksSection() {
                   </div>
                   <div className="min-w-0 flex-1 pt-1">
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="font-display text-4xl font-bold tabular-nums leading-none text-white/15 sm:text-5xl">
+                      <span className="font-display text-4xl font-bold tabular-nums leading-none text-white/55 sm:text-5xl">
                         {String(step.step).padStart(2, "0")}
                       </span>
                       <h3 className="font-display text-xl font-bold text-white sm:text-2xl">

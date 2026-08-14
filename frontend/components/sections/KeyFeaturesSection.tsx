@@ -54,7 +54,7 @@ export function KeyFeaturesSection() {
                 <article className="group relative h-full overflow-hidden border border-brand-border bg-white p-6 transition-colors hover:border-brand-navy hover:bg-brand-navy">
                   <div className="flex items-start justify-between gap-3">
                     <Icon className="h-5 w-5 text-brand-secondary" />
-                    <span className="font-display text-xs font-bold tabular-nums text-brand-border transition-colors group-hover:text-white/20">
+                    <span className="font-display text-xs font-bold tabular-nums text-brand-muted transition-colors group-hover:text-white/70">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                   </div>

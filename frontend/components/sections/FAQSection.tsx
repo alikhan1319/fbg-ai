@@ -45,7 +45,7 @@ export function FAQSection({ items }: Props) {
                     className="grid w-full grid-cols-[auto_1fr_auto] items-start gap-4 py-6 text-left sm:gap-6 sm:py-7"
                     aria-expanded={isOpen}
                   >
-                    <span className="font-display text-sm font-bold tabular-nums text-brand-secondary sm:text-base">
+                    <span className="font-display text-sm font-bold tabular-nums text-brand-ink sm:text-base">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="font-display text-lg font-bold text-brand-text sm:text-xl">

@@ -50,7 +50,9 @@ export function SectionHeading({
         )}
       >
         {title}{" "}
-        {highlight && <span className="text-brand-secondary">{highlight}</span>}
+        {highlight && (
+          <span className={light ? "text-brand-secondary" : "text-brand-ink"}>{highlight}</span>
+        )}
       </h2>
       {description && (
         <p

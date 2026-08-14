@@ -101,7 +101,7 @@ export function BlogSection({ posts }: { posts: CmsBlogPost[] }) {
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-brand-muted sm:text-base">
                   {featured.excerpt}
                 </p>
-                <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-secondary">
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-ink">
                   Read article
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
@@ -118,7 +118,7 @@ export function BlogSection({ posts }: { posts: CmsBlogPost[] }) {
                 className="group grid grid-cols-[1fr_auto] gap-4 border border-brand-border bg-white p-4 transition-colors hover:border-brand-navy hover:bg-brand-navy sm:gap-5 sm:p-5"
               >
                 <div className="min-w-0">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-secondary">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-ink">
                     {post.category}
                   </span>
                   <h3 className="mt-2 font-display text-lg font-bold leading-snug text-brand-text transition-colors group-hover:text-white">

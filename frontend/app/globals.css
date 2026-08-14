@@ -4,6 +4,7 @@
   --brand-navy: #0e1114;
   --brand-primary: #0e1114;
   --brand-secondary: #00bfa6;
+  --brand-ink: #007566;
   --brand-purple: #00bfa6;
   --brand-accent: #00bfa6;
   --brand-bg: #f6f7f8;
@@ -19,6 +20,7 @@
   --color-brand-navy: var(--brand-navy);
   --color-brand-primary: var(--brand-primary);
   --color-brand-secondary: var(--brand-secondary);
+  --color-brand-ink: var(--brand-ink);
   --color-brand-purple: var(--brand-purple);
   --color-brand-accent: var(--brand-accent);
   --color-brand-bg: var(--brand-bg);
@@ -282,6 +284,12 @@ h4 {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  color: var(--brand-ink);
+}
+
+.bg-brand-navy .studio-label,
+.hero-studio .studio-label,
+footer .studio-label {
   color: var(--brand-secondary);
 }
 

@@ -26,7 +26,7 @@ export function SeoContentSection() {
         </h3>
         <p className="mt-3 text-base leading-relaxed text-brand-muted">
           Our{" "}
-          <Link href="/remove-bg" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-bg" className="font-semibold text-brand-ink hover:underline">
             remove image background online free
           </Link>{" "}
           tool detects the primary subject (person, product, pet, or object), refines difficult edges like hair
@@ -47,12 +47,12 @@ export function SeoContentSection() {
         </p>
         <p className="mt-3 text-base leading-relaxed text-brand-muted">
           Need to{" "}
-          <Link href="/remove-background/png" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-background/png" className="font-semibold text-brand-ink hover:underline">
             remove background from PNG
           </Link>{" "}
           files that still show a leftover white box? Re-process them through the same tool to rebuild a cleaner
           alpha edge. For passport-style ID photos, see{" "}
-          <Link href="/remove-background/passport-photo" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-background/passport-photo" className="font-semibold text-brand-ink hover:underline">
             remove background from passport photo
           </Link>
           .
@@ -73,23 +73,23 @@ export function SeoContentSection() {
         </h3>
         <p className="mt-3 text-base leading-relaxed text-brand-muted">
           Beyond background removal, {BRAND.name} includes an{" "}
-          <Link href="/upscale" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/upscale" className="font-semibold text-brand-ink hover:underline">
             AI image upscaler
           </Link>
           ,{" "}
-          <Link href="/enhance-image" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/enhance-image" className="font-semibold text-brand-ink hover:underline">
             image enhancer
           </Link>
           ,{" "}
-          <Link href="/blur-background" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/blur-background" className="font-semibold text-brand-ink hover:underline">
             background blur
           </Link>
           ,{" "}
-          <Link href="/generate-background" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/generate-background" className="font-semibold text-brand-ink hover:underline">
             AI background generator
           </Link>
           , and{" "}
-          <Link href="/remove-watermark" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-watermark" className="font-semibold text-brand-ink hover:underline">
             watermark remover
           </Link>{" "}
           (for images you own). A common ecommerce path: remove background → upscale → enhance → export.
@@ -101,23 +101,23 @@ export function SeoContentSection() {
         <p className="mt-3 text-base leading-relaxed text-brand-muted">
           Sellers use cutouts for Amazon and Shopify main images. Photographers deliver studio-style portraits.
           Designers isolate logos and signatures. Explore long-tail guides for{" "}
-          <Link href="/remove-background/product-images" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-background/product-images" className="font-semibold text-brand-ink hover:underline">
             product images
           </Link>
           ,{" "}
-          <Link href="/remove-background/jewelry" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-background/jewelry" className="font-semibold text-brand-ink hover:underline">
             jewelry
           </Link>
           ,{" "}
-          <Link href="/remove-background/furniture" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-background/furniture" className="font-semibold text-brand-ink hover:underline">
             furniture
           </Link>
           ,{" "}
-          <Link href="/remove-background/car-images" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-background/car-images" className="font-semibold text-brand-ink hover:underline">
             car photos
           </Link>
           , and{" "}
-          <Link href="/remove-background/logo" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-background/logo" className="font-semibold text-brand-ink hover:underline">
             logos
           </Link>
           .
@@ -129,11 +129,11 @@ export function SeoContentSection() {
         <p className="mt-3 text-base leading-relaxed text-brand-muted">
           Uploads are processed to deliver your result, then auto-deleted within one hour. We do not sell your
           images. Read the{" "}
-          <Link href="/privacy" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/privacy" className="font-semibold text-brand-ink hover:underline">
             privacy policy
           </Link>{" "}
           for retention details, and our{" "}
-          <Link href="/blog/privacy-best-practices-online-image-tools" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/blog/privacy-best-practices-online-image-tools" className="font-semibold text-brand-ink hover:underline">
             privacy best practices guide
           </Link>{" "}
           before uploading sensitive documents. Prefer cropping IDs tightly when you only need a face or signature.
@@ -156,27 +156,27 @@ export function SeoContentSection() {
           For step-by-step workflows, read{" "}
           <Link
             href="/blog/remove-background-without-photoshop"
-            className="font-semibold text-brand-secondary hover:underline"
+            className="font-semibold text-brand-ink hover:underline"
           >
             how to remove background without Photoshop
           </Link>
           ,{" "}
-          <Link href="/blog/png-vs-jpg-which-format" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/blog/png-vs-jpg-which-format" className="font-semibold text-brand-ink hover:underline">
             PNG vs JPG
           </Link>
           , and{" "}
           <Link
             href="/blog/remove-backgrounds-ecommerce-product-photos"
-            className="font-semibold text-brand-secondary hover:underline"
+            className="font-semibold text-brand-ink hover:underline"
           >
             ecommerce product photo tips
           </Link>
           . Visit{" "}
-          <Link href="/about" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/about" className="font-semibold text-brand-ink hover:underline">
             About
           </Link>{" "}
           to learn who builds {PRIMARY_KEYWORD_TITLE}, or{" "}
-          <Link href="/contact" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/contact" className="font-semibold text-brand-ink hover:underline">
             Contact
           </Link>{" "}
           support if something fails.
@@ -184,11 +184,11 @@ export function SeoContentSection() {
 
         <p className="mt-10 border-t border-brand-border pt-8 text-sm text-brand-muted">
           Ready to try? Open the{" "}
-          <Link href="/remove-bg" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/remove-bg" className="font-semibold text-brand-ink hover:underline">
             {PRIMARY_KEYWORD} tool
           </Link>{" "}
           or browse all{" "}
-          <Link href="/use-cases" className="font-semibold text-brand-secondary hover:underline">
+          <Link href="/use-cases" className="font-semibold text-brand-ink hover:underline">
             use-case landing pages
           </Link>{" "}
           for upscale, enhance, blur, and more — no signup required.

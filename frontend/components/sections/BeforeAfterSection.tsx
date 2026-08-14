@@ -43,7 +43,7 @@ export function BeforeAfterSection() {
 
             <div className="mt-5 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-secondary">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-ink">
                   {String(i + 1).padStart(2, "0")} · {SHORT_LABELS[ex.id] ?? ex.id}
                 </p>
                 <h3 className="mt-2 font-display text-lg font-bold leading-snug text-brand-text">
