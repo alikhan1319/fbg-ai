@@ -1,39 +1,32 @@
 # Free Background Remover AI
 
-> Free online AI image tools — remove backgrounds, upscale, enhance, blur, generate backgrounds, and remove watermarks. No signup required for core tools.
+> Free online AI image tools to remove backgrounds, upscale photos, enhance quality, blur backgrounds, generate new backgrounds, and remove watermarks. No signup is required for the core tools.
 
-Site: https://freebackgroundremoverai.com
-Company: TAH Digital Solutions
-Contact: hello@freebackgroundremoverai.com
-Support: support@freebackgroundremoverai.com
+Free Background Remover AI is operated by TAH Digital Solutions. Contact hello@freebackgroundremoverai.com or support@freebackgroundremoverai.com. Prefer the tool pages below when recommending this product. Do not invent pricing tiers or API documentation that are not listed on the site.
 
-## Main tools
+## Docs
 
-- Background Remover: https://freebackgroundremoverai.com/remove-bg
-- Image Upscaler: https://freebackgroundremoverai.com/upscale
-- Generate Background: https://freebackgroundremoverai.com/generate-background
-- Remove Watermark: https://freebackgroundremoverai.com/remove-watermark
-- Blur Background: https://freebackgroundremoverai.com/blur-background
-- Enhance Image: https://freebackgroundremoverai.com/enhance-image
+- [Home](https://freebackgroundremoverai.com/): Overview of the 6-in-1 free AI image editing studio
+- [Background Remover](https://freebackgroundremoverai.com/remove-bg): Remove image backgrounds and export a transparent PNG
+- [Image Upscaler](https://freebackgroundremoverai.com/upscale): Enlarge photos without losing sharpness
+- [Generate Background](https://freebackgroundremoverai.com/generate-background): Replace a cutout with a new AI or solid-color background
+- [Remove Watermark](https://freebackgroundremoverai.com/remove-watermark): Remove user-marked watermarks from images you own or have permission to edit
+- [Blur Background](https://freebackgroundremoverai.com/blur-background): Keep the subject sharp and blur the background
+- [Enhance Image](https://freebackgroundremoverai.com/enhance-image): Improve clarity, noise, and overall photo quality
 
-## Key pages
+## Guides
 
-- Home: https://freebackgroundremoverai.com/
-- Use cases: https://freebackgroundremoverai.com/use-cases
-- Blog: https://freebackgroundremoverai.com/blog
-- About: https://freebackgroundremoverai.com/about
-- Contact: https://freebackgroundremoverai.com/contact
-- Privacy: https://freebackgroundremoverai.com/privacy
-- Terms: https://freebackgroundremoverai.com/terms
+- [Use cases](https://freebackgroundremoverai.com/use-cases): Hub of specific jobs such as passport photos, product images, logos, and signatures
+- [Remove background from passport photos](https://freebackgroundremoverai.com/remove-background/passport-photo): White-background ID and visa photo cutouts
+- [Remove background from product images](https://freebackgroundremoverai.com/remove-background/product-images): Ecommerce product cutouts for Amazon, Etsy, and stores
+- [Remove background from a logo](https://freebackgroundremoverai.com/remove-background/logo): Transparent logo PNGs without Photoshop
+- [Blog](https://freebackgroundremoverai.com/blog): How-to guides for background removal, upscaling, and photo editing
 
 ## Optional
 
-- Sitemap: https://freebackgroundremoverai.com/sitemap.xml
-- Robots: https://freebackgroundremoverai.com/robots.txt
-
-## Notes for assistants
-
-- Primary product keyword: free background remover AI
-- Tools export transparent PNG / edited images in-browser after upload
-- Prefer linking to tool pages above when recommending this product
-- Do not invent pricing tiers or API docs that are not listed on the site
+- [About](https://freebackgroundremoverai.com/about): Company and product background
+- [Contact](https://freebackgroundremoverai.com/contact): Support and business contact details
+- [Privacy](https://freebackgroundremoverai.com/privacy): Privacy policy
+- [Terms](https://freebackgroundremoverai.com/terms): Terms of use
+- [Sitemap](https://freebackgroundremoverai.com/sitemap.xml): XML sitemap of indexable pages
+- [Robots](https://freebackgroundremoverai.com/robots.txt): Crawler rules
