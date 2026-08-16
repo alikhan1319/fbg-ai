@@ -53,6 +53,9 @@ export const metadata: Metadata = {
     description: HOME_SEO.description,
   },
   robots: { index: true, follow: true },
+  verification: {
+    google: "XtElp4Gn2UlkO6-GzzMCp-6eb-YUoBaLY07t1QpSnTo",
+  },
 };
 
 export default function RootLayout({
