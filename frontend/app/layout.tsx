@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Syne } from "next/font/google";
 import { ASSET_V, BRAND, SITE_URL } from "@/lib/constants";
 import { HOME_SEO } from "@/lib/seo";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { SiteLoader } from "@/components/layout/SiteLoader";
@@ -64,6 +65,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${manrope.variable} ${syne.variable} scroll-smooth antialiased`}>
       <body className="min-h-screen overflow-x-hidden bg-brand-bg font-sans text-brand-text">
+        <GoogleAnalytics />
         <ToastProvider>
           <SiteLoader />
           <PageTransition>{children}</PageTransition>
